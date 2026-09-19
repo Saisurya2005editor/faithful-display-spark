@@ -5,7 +5,9 @@ import {
   FileText,
   FileUp,
   Loader2,
+  Pencil,
   RefreshCw,
+  Search,
   Trash2,
   UploadCloud,
 } from "lucide-react";
@@ -13,12 +15,23 @@ import { toast } from "sonner";
 import { AdminGate } from "@/components/AdminGate";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   deleteDocument,
   ingestDocument,
   listIndexedDocuments,
   reindexDocument,
+  updateDocument,
 } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/admin/ingest")({
