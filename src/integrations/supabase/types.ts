@@ -413,16 +413,6 @@ export type Database = {
     }
     Functions: {
       admin_exists: { Args: never; Returns: boolean }
-      log_analytics_event: {
-        Args: {
-          _confidence?: string
-          _lang: string
-          _question: string
-          _retrieved_count?: number
-          _top_standard?: string
-        }
-        Returns: undefined
-      }
       match_chunks: {
         Args: {
           match_count?: number
@@ -444,10 +434,6 @@ export type Database = {
       }
       set_chunk_embedding: {
         Args: { _embedding: string; _id: string }
-        Returns: undefined
-      }
-      submit_feedback: {
-        Args: { _comment?: string; _message_id?: string; _rating: number }
         Returns: undefined
       }
     }
