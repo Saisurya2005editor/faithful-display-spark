@@ -148,7 +148,7 @@ export function useStandards(): { standards: BISStandard[]; loading: boolean } {
           })),
         );
       })
-      .catch(() => undefined)
+      .catch((e) => console.error("listStandards failed", e))
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
