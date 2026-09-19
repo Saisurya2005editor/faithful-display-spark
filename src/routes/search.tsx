@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { PageShell } from "@/components/PageShell";
 import { useI18n } from "@/lib/i18n";
-import { findStandards, standards, type BISStandard } from "@/data/bis-data";
+import { type BISStandard } from "@/data/bis-data";
+import { matchStandards, useStandards } from "@/lib/bis-db";
 import { searchDocuments } from "@/lib/bis.functions";
 
 export const Route = createFileRoute("/search")({
@@ -33,12 +34,15 @@ export const Route = createFileRoute("/search")({
   component: SearchPage,
 });
 
-const sectors = Array.from(new Set(standards.map((s) => s.sector))).sort();
-const divisions = Array.from(new Set(standards.map((s) => s.division))).sort();
-const years = Array.from(new Set(standards.map((s) => s.year))).sort((a, b) => b - a);
-
 function SearchPage() {
   const { t, lang } = useI18n();
+  const { standards } = useStandards();
+  const sectors = useMemo(() => Array.from(new Set(standards.map((s) => s.sector))).sort(), [standards]);
+  const divisions = useMemo(() => Array.from(new Set(standards.map((s) => s.division))).sort(), [standards]);
+  const years = useMemo(
+    () => Array.from(new Set(standards.map((s) => s.year))).sort((a, b) => b - a),
+    [standards],
+  );
   const [query, setQuery] = useState("");
   const [sector, setSector] = useState("all");
   const [division, setDivision] = useState("all");
