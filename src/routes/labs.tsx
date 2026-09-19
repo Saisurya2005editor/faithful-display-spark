@@ -99,7 +99,7 @@ function LabsPage() {
                       </p>
                     </div>
                     <Badge variant="outline" className="text-[10px] uppercase">
-                      {t("common.sample")}
+                      {t(l.dataOrigin === "Verified source" ? "common.verified" : "common.sample")}
                     </Badge>
                   </header>
 

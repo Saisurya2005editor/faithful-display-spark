@@ -46,7 +46,7 @@ function CertificationPage() {
                   <BadgeCheck className="h-5 w-5" aria-hidden />
                 </span>
                 <Badge variant="outline" className="text-[10px] uppercase">
-                  {t("common.sample")}
+                  {t(s.dataOrigin === "Verified source" ? "common.verified" : "common.sample")}
                 </Badge>
               </div>
               <h2 className="mt-4 text-base font-semibold leading-snug">{s.name}</h2>
