@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageShell } from "@/components/PageShell";
 import { useI18n } from "@/lib/i18n";
-import { findStandards, getScheme, productCategories, standards, type BISStandard } from "@/data/bis-data";
+import { getScheme, productCategories, type BISStandard } from "@/data/bis-data";
+import { matchStandards, useStandards } from "@/lib/bis-db";
 import { recommendProduct } from "@/lib/bis.functions";
 
 export const Route = createFileRoute("/recommend")({
@@ -40,6 +41,7 @@ interface Ranked {
 
 function RecommendPage() {
   const { t, lang } = useI18n();
+  const { standards } = useStandards();
   const [product, setProduct] = useState("");
   const [category, setCategory] = useState("all");
   const [market, setMarket] = useState("domestic");
@@ -48,10 +50,10 @@ function RecommendPage() {
   const [results, setResults] = useState<Ranked[] | null>(null);
 
   const fallbackLocal = (text: string): Ranked[] => {
-    const matched = findStandards(`${text} ${category === "all" ? "" : category}`).filter((s) =>
+    const matched = matchStandards(standards, `${text} ${category === "all" ? "" : category}`).filter((s) =>
       category === "all" ? true : s.sector === category,
     );
-    const pool = matched.length ? matched : findStandards(text);
+    const pool = matched.length ? matched : matchStandards(standards, text);
     return pool.slice(0, 6).map((standard, i) => ({ standard, score: Math.max(58, 96 - i * 8) }));
   };
 
