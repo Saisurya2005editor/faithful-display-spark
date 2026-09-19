@@ -231,8 +231,8 @@ export const getInsights = createServerFn({ method: "GET" })
     for (const e of rows as any[]) {
       byLang[e.lang] = (byLang[e.lang] ?? 0) + 1;
       if (e.top_standard) byStandard[e.top_standard] = (byStandard[e.top_standard] ?? 0) + 1;
-      if (e.confidence && confValue[e.confidence] != null) {
-        confSum += confValue[e.confidence];
+      if (e.confidence && confValue[e.confidence] !== undefined) {
+        confSum += confValue[e.confidence]!;
         confN++;
       }
     }
