@@ -19,8 +19,6 @@ interface LabRow {
   city: string;
   state: string;
   recognized_scope: string[];
-  contact: string;
-  email: string;
   source_url: string;
 }
 
@@ -42,7 +40,7 @@ export function useLabs(): TestingLab[] {
     void (async () => {
       const { data, error } = await supabase
         .from("labs")
-        .select("lab_key,name,city,state,recognized_scope,contact,email,source_url");
+        .select("lab_key,name,city,state,recognized_scope,source_url");
       if (cancelled || error || !data || data.length === 0) return;
       setRemote(
         (data as unknown as LabRow[]).map((r) => ({
@@ -51,8 +49,9 @@ export function useLabs(): TestingLab[] {
           city: r.city,
           state: r.state,
           recognizedScope: r.recognized_scope ?? [],
-          contact: r.contact,
-          email: r.email,
+          // Contact details are intentionally not exposed by the public API.
+          contact: "",
+          email: "",
           sourceUrl: r.source_url,
           dataOrigin: "Sample" as const,
         })),
