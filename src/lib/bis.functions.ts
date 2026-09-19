@@ -45,9 +45,9 @@ interface MatchedChunk {
   standard_number: string;
   title: string;
   clause_ref: string;
-  excerpt: string;
+  chunk_text: string;
   source_url: string;
-  origin: string;
+  data_origin: string;
   score: number;
 }
 
