@@ -41,6 +41,13 @@ import { CitationCard } from "@/components/CitationCard";
 import { LanguageSelect } from "@/components/LanguageSelect";
 import { useI18n } from "@/lib/i18n";
 import { generateAnswer, quickActionPrompts, type AnswerPayload, type Confidence } from "@/lib/mock-ai";
+import { askBis, saveFeedback } from "@/lib/bis.functions";
+import {
+  loadLocalConversations,
+  loadRemoteConversations,
+  saveLocalConversations,
+  saveRemoteConversation,
+} from "@/lib/conversations";
 
 const searchSchema = z.object({
   q: z.string().optional(),
@@ -85,7 +92,7 @@ interface Conversation {
   messages: Message[];
 }
 
-const uid = () => Math.random().toString(36).slice(2, 10);
+const uid = () => crypto.randomUUID();
 
 const quickActions = [
   { key: "recommend", labelKey: "qa.recommend", icon: Sparkles },
@@ -106,10 +113,11 @@ function ChatPage() {
   const navigate = useNavigate();
   const { q } = Route.useSearch();
 
-  const [conversations, setConversations] = useState<Conversation[]>([
-    { id: "c1", title: "New chat", messages: [] },
+  const [conversations, setConversations] = useState<Conversation[]>(() => [
+    { id: uid(), title: "New chat", messages: [] },
   ]);
-  const [activeId, setActiveId] = useState("c1");
+  const [activeId, setActiveId] = useState(() => conversations[0]!.id);
+  const [userId, setUserId] = useState<string | null>(null);
   const [convSearch, setConvSearch] = useState("");
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
