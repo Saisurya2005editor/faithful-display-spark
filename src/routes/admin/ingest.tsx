@@ -5,7 +5,9 @@ import {
   FileText,
   FileUp,
   Loader2,
+  Pencil,
   RefreshCw,
+  Search,
   Trash2,
   UploadCloud,
 } from "lucide-react";
@@ -13,12 +15,23 @@ import { toast } from "sonner";
 import { AdminGate } from "@/components/AdminGate";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   deleteDocument,
   ingestDocument,
   listIndexedDocuments,
   reindexDocument,
+  updateDocument,
 } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/admin/ingest")({
@@ -55,6 +68,7 @@ interface IndexedDoc {
   division: string | null;
   year: number | null;
   source_url: string | null;
+  summary: string | null;
   data_origin: string;
   created_at: string;
   chunkCount: number;
@@ -87,6 +101,9 @@ function IngestBody() {
   const [docs, setDocs] = useState<IndexedDoc[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [query, setQuery] = useState("");
+  const [editing, setEditing] = useState<IndexedDoc | null>(null);
+  const [saving, setSaving] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
   const refreshDocs = useCallback(() => {
@@ -153,7 +170,43 @@ function IngestBody() {
     refreshDocs();
   };
 
-  const removeDoc = (id: string) => {
+  const q = query.trim().toLowerCase();
+  const visibleDocs = q
+    ? docs.filter((d) =>
+        [d.standard_number, d.title, d.division ?? "", String(d.year ?? "")]
+          .join(" ")
+          .toLowerCase()
+          .includes(q),
+      )
+    : docs;
+
+  const saveEdit = async () => {
+    if (!editing) return;
+    setSaving(true);
+    try {
+      await updateDocument({
+        data: {
+          documentId: editing.id,
+          standardNumber: editing.standard_number.trim(),
+          title: editing.title.trim(),
+          division: editing.division?.trim() ?? "",
+          year: editing.year && editing.year >= 1900 && editing.year <= 2100 ? editing.year : null,
+          sourceUrl: editing.source_url?.trim() ?? "",
+          summary: editing.summary?.trim() ?? "",
+        },
+      });
+      toast.success("Document updated");
+      setEditing(null);
+      refreshDocs();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not update document");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const removeDoc = (id: string, label: string) => {
+    if (!window.confirm(`Delete "${label}" and all of its indexed text?`)) return;
     void deleteDocument({ data: { documentId: id } })
       .then(() => {
         toast.success("Document deleted");
@@ -173,11 +226,12 @@ function IngestBody() {
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
       <h1 className="flex items-center gap-2 text-2xl font-bold">
         <Database className="h-6 w-6 text-accent" aria-hidden />
-        Knowledge base ingestion
+        Document dashboard
       </h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        Upload real Indian Standards / BIS scheme documents (text-based PDF or .txt). Each is parsed,
-        chunked, embedded and stored — then cited as <strong>Verified source</strong> in answers.
+        Upload, edit and delete real Indian Standards / BIS scheme documents (text-based PDF or
+        .txt). Each upload is parsed, chunked, embedded and stored — then cited as{" "}
+        <strong>Verified source</strong> in answers.
       </p>
 
       {/* Upload zone */}
@@ -301,11 +355,23 @@ function IngestBody() {
 
       {/* Indexed documents */}
       <section className="mt-10">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Indexed documents ({docs.length})</h2>
-          <Button variant="ghost" size="sm" onClick={refreshDocs}>
-            <RefreshCw className="mr-1.5 h-4 w-4" /> Refresh
-          </Button>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold">Indexed documents ({visibleDocs.length})</h2>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+              <Input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search documents"
+                aria-label="Search documents"
+                className="w-48 pl-8"
+              />
+            </div>
+            <Button variant="ghost" size="sm" onClick={refreshDocs}>
+              <RefreshCw className="mr-1.5 h-4 w-4" /> Refresh
+            </Button>
+          </div>
         </div>
         <div className="mt-3 overflow-x-auto rounded-xl border border-border">
           <table className="w-full min-w-[720px] text-sm">
@@ -327,7 +393,7 @@ function IngestBody() {
                   </td>
                 </tr>
               ) : (
-                docs.map((d) => (
+                visibleDocs.map((d) => (
                   <tr key={d.id} className="border-t border-border">
                     <td className="px-4 py-2.5 font-mono text-xs font-semibold">{d.standard_number}</td>
                     <td className="max-w-[280px] truncate px-4 py-2.5">{d.title}</td>
@@ -346,6 +412,9 @@ function IngestBody() {
                       </Badge>
                     </td>
                     <td className="px-4 py-2.5 text-right">
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditing(d)} aria-label="Edit">
+                        <Pencil className="h-4 w-4" />
+                      </Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => reindex(d.id)} aria-label="Re-index">
                         <RefreshCw className="h-4 w-4" />
                       </Button>
@@ -353,7 +422,7 @@ function IngestBody() {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-destructive"
-                        onClick={() => removeDoc(d.id)}
+                        onClick={() => removeDoc(d.id, d.standard_number)}
                         aria-label="Delete"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -366,6 +435,85 @@ function IngestBody() {
           </table>
         </div>
       </section>
+
+      <Dialog open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit document</DialogTitle>
+            <DialogDescription>
+              Update the details shown in answers and citations. Indexed text stays as it is.
+            </DialogDescription>
+          </DialogHeader>
+          {editing && (
+            <div className="grid gap-3">
+              <div className="grid gap-1.5">
+                <Label htmlFor="ed-standard">Standard number</Label>
+                <Input
+                  id="ed-standard"
+                  value={editing.standard_number}
+                  onChange={(e) => setEditing({ ...editing, standard_number: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="ed-title">Title</Label>
+                <Input
+                  id="ed-title"
+                  value={editing.title}
+                  onChange={(e) => setEditing({ ...editing, title: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-1.5">
+                  <Label htmlFor="ed-division">Division</Label>
+                  <Input
+                    id="ed-division"
+                    value={editing.division ?? ""}
+                    onChange={(e) => setEditing({ ...editing, division: e.target.value })}
+                  />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="ed-year">Year</Label>
+                  <Input
+                    id="ed-year"
+                    inputMode="numeric"
+                    value={editing.year ?? ""}
+                    onChange={(e) => {
+                      const v = e.target.value.replace(/\D/g, "").slice(0, 4);
+                      setEditing({ ...editing, year: v ? Number(v) : null });
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="ed-source">Source URL</Label>
+                <Input
+                  id="ed-source"
+                  value={editing.source_url ?? ""}
+                  onChange={(e) => setEditing({ ...editing, source_url: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="ed-summary">Summary</Label>
+                <Textarea
+                  id="ed-summary"
+                  rows={3}
+                  value={editing.summary ?? ""}
+                  onChange={(e) => setEditing({ ...editing, summary: e.target.value })}
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditing(null)} disabled={saving}>
+              Cancel
+            </Button>
+            <Button onClick={() => void saveEdit()} disabled={saving}>
+              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -92,7 +92,7 @@ export const listIndexedDocuments = createServerFn({ method: "GET" })
     await requireAdmin(supabase, userId);
     const { data: docs, error } = await supabase
       .from("documents")
-      .select("id, standard_number, title, division, year, source_url, data_origin, created_at")
+      .select("id, standard_number, title, division, year, source_url, summary, data_origin, created_at")
       .order("created_at", { ascending: false });
     if (error) throw new Error(`Could not list documents: ${error.message}`);
     const { data: chunkRows, error: cErr } = await supabase.from("chunks").select("document_id");
@@ -173,6 +173,38 @@ export const ingestDocument = createServerFn({ method: "POST" })
     steps.push("Stored in the knowledge base");
 
     return { steps, documentId: doc.id as string, chunkCount: chunks.length };
+  });
+
+const UpdateInput = z.object({
+  documentId: z.string().uuid(),
+  standardNumber: z.string().min(1).max(60),
+  title: z.string().min(1).max(300),
+  division: z.string().max(120).default(""),
+  year: z.number().int().min(1900).max(2100).nullable().default(null),
+  sourceUrl: z.string().max(500).default(""),
+  summary: z.string().max(2000).default(""),
+});
+
+/** Edit the metadata of an indexed document (chunks and embeddings are untouched). */
+export const updateDocument = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => UpdateInput.parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context as any;
+    await requireAdmin(supabase, userId);
+    const { error } = await supabase
+      .from("documents")
+      .update({
+        standard_number: data.standardNumber,
+        title: data.title,
+        division: data.division || null,
+        year: data.year,
+        source_url: data.sourceUrl || null,
+        summary: data.summary || null,
+      })
+      .eq("id", data.documentId);
+    if (error) throw new Error(`Could not update document: ${error.message}`);
+    return { ok: true };
   });
 
 export const deleteDocument = createServerFn({ method: "POST" })
