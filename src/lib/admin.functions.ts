@@ -37,29 +37,75 @@ function base64ToBytes(b64: string): Uint8Array {
   return bytes;
 }
 
-/** Split extracted text into overlapping chunks of roughly 1100 characters. */
-function chunkText(text: string): { text: string; clauseRef: string }[] {
-  const cleaned = text.replace(/\s+/g, " ").trim();
-  if (!cleaned) return [];
-  const sentences = cleaned.split(/(?<=[.!?;])\s+/);
-  const chunks: { text: string; clauseRef: string }[] = [];
+interface Chunk {
+  text: string;
+  clauseRef: string;
+  heading: string;
+}
+
+/**
+ * Split an Indian Standard into clause-aware chunks. Numbered clause headings
+ * ("7.1 Marking and instructions") start a new clause; long clauses are split
+ * further into ~1100 character pieces that keep the clause reference.
+ */
+function chunkText(text: string): Chunk[] {
+  const clauses = splitClauses(text);
+  const chunks: Chunk[] = [];
+  for (const c of clauses) {
+    for (const piece of splitLong(c.text)) {
+      chunks.push({ text: piece, clauseRef: c.ref, heading: c.heading });
+    }
+  }
+  return chunks.slice(0, 400);
+}
+
+const CLAUSE_HEADING = /(?:^|\n)\s*(\d{1,2}(?:\.\d{1,2}){0,3})\s+([A-Z][^\n]{2,90})/g;
+
+/** Segment raw text on numbered clause headings, keeping ref + heading title. */
+function splitClauses(raw: string): { ref: string; heading: string; text: string }[] {
+  const text = raw.replace(/\r/g, "");
+  const marks: { index: number; ref: string; heading: string }[] = [];
+  CLAUSE_HEADING.lastIndex = 0;
+  let m: RegExpExecArray | null;
+  while ((m = CLAUSE_HEADING.exec(text))) {
+    const heading = m[2]!.trim().replace(/\s+/g, " ");
+    // headings are short title-like lines, not sentences
+    if (heading.length > 80 || /[.;]$/.test(heading)) continue;
+    marks.push({ index: m.index, ref: `Clause ${m[1]}`, heading });
+  }
+  if (marks.length < 3) {
+    return [{ ref: "General", heading: "Extract", text: clean(text) }];
+  }
+  const out: { ref: string; heading: string; text: string }[] = [];
+  const preamble = clean(text.slice(0, marks[0]!.index));
+  if (preamble.length > 200) out.push({ ref: "General", heading: "Scope / preamble", text: preamble });
+  for (let i = 0; i < marks.length; i++) {
+    const body = clean(text.slice(marks[i]!.index, marks[i + 1]?.index ?? text.length));
+    if (body.length < 60) continue;
+    out.push({ ref: marks[i]!.ref, heading: marks[i]!.heading, text: body });
+  }
+  return out;
+}
+
+function clean(s: string): string {
+  return s.replace(/\s+/g, " ").trim();
+}
+
+function splitLong(text: string): string[] {
+  if (text.length <= 1400) return text ? [text] : [];
+  const sentences = text.split(/(?<=[.!?;])\s+/);
+  const pieces: string[] = [];
   let current = "";
   for (const s of sentences) {
     if (current.length + s.length > 1100 && current.length > 300) {
-      chunks.push({ text: current.trim(), clauseRef: detectClause(current) });
-      // small overlap for context continuity
+      pieces.push(current.trim());
       current = current.slice(-180) + " " + s;
     } else {
       current += (current ? " " : "") + s;
     }
   }
-  if (current.trim()) chunks.push({ text: current.trim(), clauseRef: detectClause(current) });
-  return chunks.slice(0, 400);
-}
-
-function detectClause(text: string): string {
-  const m = text.match(/\b(?:clause|cl\.?|table)?\s*(\d+(?:\.\d+){1,3})\b/i);
-  return m ? `Clause ${m[1]}` : "General";
+  if (current.trim()) pieces.push(current.trim());
+  return pieces;
 }
 
 export const getAdminStatus = createServerFn({ method: "GET" })
