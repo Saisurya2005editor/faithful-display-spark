@@ -336,3 +336,138 @@ export const saveFeedback = createServerFn({ method: "POST" })
     if (error) throw new Error(`Could not save feedback: ${error.message}`);
     return { ok: true };
   });
+
+/* ------------------------------------------------------------------ *
+ * Product guide: product + standard -> required tests, limits, labs.
+ * ------------------------------------------------------------------ */
+
+export interface GuideOption {
+  productCategory: string;
+  standards: { standardNumber: string; title: string; mandatory: boolean; keywords: string[] }[];
+}
+
+/** Products that are linked to at least one indexed standard. */
+export const listGuideOptions = createServerFn({ method: "GET" }).handler(
+  async (): Promise<{ options: GuideOption[] }> => {
+    const client = db();
+    const [{ data: links }, { data: docs }] = await Promise.all([
+      client.from("products_map").select("standard_number, product_category, product_keywords, mandatory"),
+      client.from("documents").select("standard_number, title"),
+    ]);
+    const titleOf = new Map((docs ?? []).map((d: any) => [d.standard_number as string, d.title as string]));
+    const byProduct = new Map<string, GuideOption>();
+    for (const l of (links ?? []) as any[]) {
+      const keywords: string[] = l.product_keywords ?? [];
+      const category: string = l.product_category ?? keywords[0] ?? "Other";
+      const title = titleOf.get(l.standard_number);
+      if (!title) continue; // only standards we have indexed
+      const entry = byProduct.get(category) ?? { productCategory: category, standards: [] };
+      if (!entry.standards.some((s) => s.standardNumber === l.standard_number)) {
+        entry.standards.push({
+          standardNumber: l.standard_number,
+          title,
+          mandatory: !!l.mandatory,
+          keywords,
+        });
+      }
+      byProduct.set(category, entry);
+    }
+    return {
+      options: [...byProduct.values()]
+        .map((o) => ({ ...o, standards: o.standards.sort((a, b) => a.standardNumber.localeCompare(b.standardNumber)) }))
+        .sort((a, b) => a.productCategory.localeCompare(b.productCategory)),
+    };
+  },
+);
+
+export interface GuideResult {
+  standardNumber: string;
+  title: string;
+  sourceUrl: string;
+  origin: "Sample" | "Verified source";
+  tests: { testName: string; clauseRef: string; requirement: string; method: string }[];
+  clauses: { ref: string; heading: string; excerpt: string }[];
+  labs: { name: string; city: string; state: string; scope: string[]; sourceUrl: string }[];
+}
+
+/** Everything needed for one product + standard pair on the product guide page. */
+export const getProductGuide = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z
+      .object({ standardNumber: z.string().min(1).max(60), productCategory: z.string().max(120).default("") })
+      .parse(input),
+  )
+  .handler(async ({ data }): Promise<GuideResult> => {
+    const client = db();
+    const { data: doc } = await client
+      .from("documents")
+      .select("id, standard_number, title, source_url, data_origin")
+      .eq("standard_number", data.standardNumber)
+      .limit(1)
+      .maybeSingle();
+    if (!doc) throw new Error(`Standard ${data.standardNumber} is not in the knowledge base.`);
+
+    const [{ data: testRows }, { data: chunkRows }, { data: labRows }] = await Promise.all([
+      client
+        .from("standard_tests")
+        .select("test_name, clause_ref, requirement, method, product_category")
+        .eq("standard_number", data.standardNumber),
+      client
+        .from("chunks")
+        .select("clause_ref, heading, chunk_text")
+        .eq("document_id", (doc as any).id)
+        .limit(120),
+      client.from("labs").select("name, city, state, recognized_scope, source_url"),
+    ]);
+
+    const tests = ((testRows ?? []) as any[])
+      .filter((t) => !t.product_category || !data.productCategory || t.product_category === data.productCategory)
+      .map((t) => ({
+        testName: t.test_name as string,
+        clauseRef: (t.clause_ref as string) ?? "—",
+        requirement: (t.requirement as string) ?? "See clause",
+        method: (t.method as string) ?? "",
+      }))
+      .sort((a, b) => a.clauseRef.localeCompare(b.clauseRef, undefined, { numeric: true }));
+
+    // Clause extracts that mention requirements or limits, for evidence.
+    const clauses = ((chunkRows ?? []) as any[])
+      .filter((c) => /\bshall\b|requirement|limit|test/i.test(c.chunk_text ?? ""))
+      .slice(0, 8)
+      .map((c) => ({
+        ref: (c.clause_ref as string) ?? "General",
+        heading: (c.heading as string) ?? "Extract",
+        excerpt: ((c.chunk_text as string) ?? "").slice(0, 420),
+      }));
+
+    const words = `${data.productCategory} ${(doc as any).title}`
+      .toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .filter((w) => w.length > 3);
+    const labs = ((labRows ?? []) as any[])
+      .map((l) => {
+        const scope: string[] = l.recognized_scope ?? [];
+        const hay = scope.join(" ").toLowerCase();
+        return { lab: l, scope, score: words.filter((w) => hay.includes(w)).length };
+      })
+      .sort((a, b) => b.score - a.score)
+      .filter((x, i) => x.score > 0 || i < 3)
+      .slice(0, 6)
+      .map((x) => ({
+        name: x.lab.name as string,
+        city: x.lab.city as string,
+        state: x.lab.state as string,
+        scope: x.scope,
+        sourceUrl: (x.lab.source_url as string) ?? "https://www.bis.gov.in/",
+      }));
+
+    return {
+      standardNumber: (doc as any).standard_number,
+      title: (doc as any).title,
+      sourceUrl: (doc as any).source_url ?? "https://www.bis.gov.in/",
+      origin: (doc as any).data_origin === "Verified source" ? "Verified source" : "Sample",
+      tests,
+      clauses,
+      labs,
+    };
+  });
