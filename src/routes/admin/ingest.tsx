@@ -170,7 +170,33 @@ function IngestBody() {
     refreshDocs();
   };
 
-  const removeDoc = (id: string) => {
+  const saveEdit = async () => {
+    if (!editing) return;
+    setSaving(true);
+    try {
+      await updateDocument({
+        data: {
+          documentId: editing.id,
+          standardNumber: editing.standard_number.trim(),
+          title: editing.title.trim(),
+          division: editing.division?.trim() ?? "",
+          year: editing.year ?? null,
+          sourceUrl: editing.source_url?.trim() ?? "",
+          summary: editing.summary?.trim() ?? "",
+        },
+      });
+      toast.success("Document updated");
+      setEditing(null);
+      refreshDocs();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not update document");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const removeDoc = (id: string, label: string) => {
+    if (!window.confirm(`Delete "${label}" and all of its indexed text?`)) return;
     void deleteDocument({ data: { documentId: id } })
       .then(() => {
         toast.success("Document deleted");
