@@ -374,6 +374,10 @@ export const suggestTests = createServerFn({ method: "POST" })
     for (const r of (rows ?? []) as any[]) {
       const text: string = r.chunk_text ?? "";
       const heading: string = (r.heading ?? "").trim();
+      const clause: string = (r.clause_ref ?? "").trim();
+      // Front matter (foreword, scope, publisher lines) carries no testable requirement.
+      if (/^clause\s*0\b/i.test(clause)) continue;
+      if (/^(foreword|scope|contents|bis\b|bureau of indian standards)/i.test(heading)) continue;
       if (!TEST_HINT.test(`${heading} ${text}`)) continue;
       const sentence =
         text
