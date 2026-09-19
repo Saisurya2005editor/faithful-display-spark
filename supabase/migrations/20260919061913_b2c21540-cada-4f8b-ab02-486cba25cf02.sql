@@ -1,0 +1,1 @@
+revoke execute on function public.set_chunk_embedding(uuid, vector) from anon, authenticated;

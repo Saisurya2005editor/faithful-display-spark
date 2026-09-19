@@ -1,5 +1,5 @@
-import { Link } from "@tanstack/react-router";
-import { Menu, Moon, Sun } from "lucide-react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { LogOut, Menu, Moon, Sun, UserRound } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -7,6 +7,8 @@ import { Logo } from "@/components/Logo";
 import { LanguageSelect } from "@/components/LanguageSelect";
 import { useTheme } from "@/components/theme";
 import { useI18n } from "@/lib/i18n";
+import { useAuthUser } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 
 const links = [
   { to: "/chat", key: "nav.chat" },
@@ -20,7 +22,14 @@ const links = [
 export function Navbar() {
   const { t } = useI18n();
   const { theme, toggle } = useTheme();
+  const { user } = useAuthUser();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    navigate({ to: "/" });
+  };
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur">
@@ -45,6 +54,25 @@ export function Navbar() {
           <Button variant="ghost" size="icon" onClick={toggle} aria-label={t("nav.theme")}>
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
+          {user ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void signOut()}
+              className="hidden gap-1.5 sm:inline-flex"
+              title={user.email ?? undefined}
+            >
+              <LogOut className="h-3.5 w-3.5" aria-hidden />
+              {t("nav.signout")}
+            </Button>
+          ) : (
+            <Button asChild variant="outline" size="sm" className="hidden gap-1.5 sm:inline-flex">
+              <Link to="/auth">
+                <UserRound className="h-3.5 w-3.5" aria-hidden />
+                {t("nav.signin")}
+              </Link>
+            </Button>
+          )}
           <Button asChild size="sm" className="hidden sm:inline-flex">
             <Link to="/chat">{t("hero.cta")}</Link>
           </Button>
@@ -68,6 +96,13 @@ export function Navbar() {
                     {t(l.key)}
                   </Link>
                 ))}
+                <Link
+                  to="/auth"
+                  onClick={() => setOpen(false)}
+                  className="rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
+                >
+                  {user ? t("nav.signout") : t("nav.signin")}
+                </Link>
                 <div className="mt-4">
                   <LanguageSelect className="h-9 w-full" />
                 </div>

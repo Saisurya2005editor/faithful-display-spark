@@ -41,6 +41,13 @@ import { CitationCard } from "@/components/CitationCard";
 import { LanguageSelect } from "@/components/LanguageSelect";
 import { useI18n } from "@/lib/i18n";
 import { generateAnswer, quickActionPrompts, type AnswerPayload, type Confidence } from "@/lib/mock-ai";
+import { askBis, saveFeedback } from "@/lib/bis.functions";
+import {
+  loadLocalConversations,
+  loadRemoteConversations,
+  saveLocalConversations,
+  saveRemoteConversation,
+} from "@/lib/conversations";
 
 const searchSchema = z.object({
   q: z.string().optional(),
@@ -85,7 +92,7 @@ interface Conversation {
   messages: Message[];
 }
 
-const uid = () => Math.random().toString(36).slice(2, 10);
+const uid = () => crypto.randomUUID();
 
 const quickActions = [
   { key: "recommend", labelKey: "qa.recommend", icon: Sparkles },
@@ -106,10 +113,11 @@ function ChatPage() {
   const navigate = useNavigate();
   const { q } = Route.useSearch();
 
-  const [conversations, setConversations] = useState<Conversation[]>([
-    { id: "c1", title: "New chat", messages: [] },
+  const [conversations, setConversations] = useState<Conversation[]>(() => [
+    { id: uid(), title: "New chat", messages: [] },
   ]);
-  const [activeId, setActiveId] = useState("c1");
+  const [activeId, setActiveId] = useState(() => conversations[0]!.id);
+  const [userId, setUserId] = useState<string | null>(null);
   const [convSearch, setConvSearch] = useState("");
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
@@ -148,11 +156,22 @@ function ChatPage() {
       setInput("");
       setPending(true);
 
-      const payload = generateAnswer(text, lang);
-      const assistantId = uid();
+      const history = (active?.messages ?? [])
+        .slice(-6)
+        .map((m) => ({ role: m.role, content: m.content }));
 
-      // Simulated streaming: reveal the answer progressively.
-      window.setTimeout(() => {
+      void (async () => {
+        let payload: AnswerPayload;
+        try {
+          payload = await askBis({ data: { query: text, lang, history } });
+        } catch {
+          toast.error(t("chat.liveUnavailable"));
+          payload = generateAnswer(text, lang);
+        }
+
+        const assistantId = uid();
+
+        // Simulated streaming: reveal the answer progressively.
         updateActive((c) => ({
           ...c,
           messages: [...c.messages, { id: assistantId, role: "assistant", content: "" }],
@@ -199,9 +218,9 @@ function ChatPage() {
             setPending(false);
           }
         }, 45);
-      }, 700);
+      })();
     },
-    [activeId, lang, pending, updateActive],
+    [activeId, active?.messages, lang, pending, updateActive, t],
   );
 
   // Seed the thread from ?q= (landing page chips, recommender handoff).
