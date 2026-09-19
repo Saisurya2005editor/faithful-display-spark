@@ -119,7 +119,7 @@ function IngestBody() {
     setPending((prev) => prev.map((p) => (p.key === key ? { ...p, ...patch } : p)));
 
   const ingestOne = async (p: PendingFile) => {
-    updatePending(p.key, { status: "working", steps: ["Parsing…"], error: undefined });
+    updatePending(p.key, { status: "working", steps: ["Parsing…"] });
     try {
       const contentBase64 = await readAsBase64(p.file);
       updatePending(p.key, { steps: ["Parsing…", "Chunking & embedding…"] });

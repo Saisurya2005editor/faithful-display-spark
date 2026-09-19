@@ -17,6 +17,8 @@ import { Route as ChatRouteImport } from './routes/chat'
 import { Route as LabsRouteImport } from './routes/labs'
 import { Route as RecommendRouteImport } from './routes/recommend'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as AdminIngestRouteImport } from './routes/admin/ingest'
+import { Route as AdminInsightsRouteImport } from './routes/admin/insights'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -58,6 +60,16 @@ const SearchRoute = SearchRouteImport.update({
   path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIngestRoute = AdminIngestRouteImport.update({
+  id: '/admin/ingest',
+  path: '/admin/ingest',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminInsightsRoute = AdminInsightsRouteImport.update({
+  id: '/admin/insights',
+  path: '/admin/insights',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -68,6 +80,8 @@ export interface FileRoutesByFullPath {
   '/labs': typeof LabsRoute
   '/recommend': typeof RecommendRoute
   '/search': typeof SearchRoute
+  '/admin/ingest': typeof AdminIngestRoute
+  '/admin/insights': typeof AdminInsightsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -78,6 +92,8 @@ export interface FileRoutesByTo {
   '/labs': typeof LabsRoute
   '/recommend': typeof RecommendRoute
   '/search': typeof SearchRoute
+  '/admin/ingest': typeof AdminIngestRoute
+  '/admin/insights': typeof AdminInsightsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -89,6 +105,8 @@ export interface FileRoutesById {
   '/labs': typeof LabsRoute
   '/recommend': typeof RecommendRoute
   '/search': typeof SearchRoute
+  '/admin/ingest': typeof AdminIngestRoute
+  '/admin/insights': typeof AdminInsightsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -101,6 +119,8 @@ export interface FileRouteTypes {
     | '/labs'
     | '/recommend'
     | '/search'
+    | '/admin/ingest'
+    | '/admin/insights'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -111,6 +131,8 @@ export interface FileRouteTypes {
     | '/labs'
     | '/recommend'
     | '/search'
+    | '/admin/ingest'
+    | '/admin/insights'
   id:
     | '__root__'
     | '/'
@@ -121,6 +143,8 @@ export interface FileRouteTypes {
     | '/labs'
     | '/recommend'
     | '/search'
+    | '/admin/ingest'
+    | '/admin/insights'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -132,6 +156,8 @@ export interface RootRouteChildren {
   LabsRoute: typeof LabsRoute
   RecommendRoute: typeof RecommendRoute
   SearchRoute: typeof SearchRoute
+  AdminIngestRoute: typeof AdminIngestRoute
+  AdminInsightsRoute: typeof AdminInsightsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -192,6 +218,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/ingest': {
+      id: '/admin/ingest'
+      path: '/admin/ingest'
+      fullPath: '/admin/ingest'
+      preLoaderRoute: typeof AdminIngestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/insights': {
+      id: '/admin/insights'
+      path: '/admin/insights'
+      fullPath: '/admin/insights'
+      preLoaderRoute: typeof AdminInsightsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -204,6 +244,8 @@ const rootRouteChildren: RootRouteChildren = {
   LabsRoute: LabsRoute,
   RecommendRoute: RecommendRoute,
   SearchRoute: SearchRoute,
+  AdminIngestRoute: AdminIngestRoute,
+  AdminInsightsRoute: AdminInsightsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
