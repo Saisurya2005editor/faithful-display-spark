@@ -42,6 +42,7 @@ import { LanguageSelect } from "@/components/LanguageSelect";
 import { useI18n } from "@/lib/i18n";
 import { generateAnswer, quickActionPrompts, type AnswerPayload, type Confidence } from "@/lib/mock-ai";
 import { askBis, saveFeedback } from "@/lib/bis.functions";
+import { consumeDemoQuery } from "@/lib/demo";
 import {
   loadLocalConversations,
   loadRemoteConversations,
@@ -83,6 +84,7 @@ interface Message {
   confidence?: Confidence;
   followups?: string[];
   retrievedCount?: number;
+  retrieved?: NonNullable<AnswerPayload["retrieved"]>;
   rating?: "up" | "down";
 }
 
