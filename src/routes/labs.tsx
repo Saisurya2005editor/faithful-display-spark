@@ -115,14 +115,6 @@ function LabsPage() {
                   </div>
 
                   <footer className="mt-4 flex flex-wrap items-center gap-4 border-t border-border pt-4 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1.5">
-                      <Phone className="h-3.5 w-3.5" aria-hidden />
-                      {l.contact}
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <Mail className="h-3.5 w-3.5" aria-hidden />
-                      {l.email}
-                    </span>
                     <Button asChild size="sm" variant="ghost" className="ml-auto">
                       <Link to="/chat" search={{ q: `What tests does ${l.name} do and how do I send samples?` }}>
                         <MessageSquare className="mr-1.5 h-3.5 w-3.5" aria-hidden />
