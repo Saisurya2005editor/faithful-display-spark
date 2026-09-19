@@ -14,6 +14,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CertificationRouteImport } from './routes/certification'
 import { Route as ChatRouteImport } from './routes/chat'
+import { Route as GuideRouteImport } from './routes/guide'
 import { Route as LabsRouteImport } from './routes/labs'
 import { Route as RecommendRouteImport } from './routes/recommend'
 import { Route as SearchRouteImport } from './routes/search'
@@ -43,6 +44,11 @@ const CertificationRoute = CertificationRouteImport.update({
 const ChatRoute = ChatRouteImport.update({
   id: '/chat',
   path: '/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuideRoute = GuideRouteImport.update({
+  id: '/guide',
+  path: '/guide',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LabsRoute = LabsRouteImport.update({
@@ -77,6 +83,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/certification': typeof CertificationRoute
   '/chat': typeof ChatRoute
+  '/guide': typeof GuideRoute
   '/labs': typeof LabsRoute
   '/recommend': typeof RecommendRoute
   '/search': typeof SearchRoute
@@ -89,6 +96,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/certification': typeof CertificationRoute
   '/chat': typeof ChatRoute
+  '/guide': typeof GuideRoute
   '/labs': typeof LabsRoute
   '/recommend': typeof RecommendRoute
   '/search': typeof SearchRoute
@@ -102,6 +110,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/certification': typeof CertificationRoute
   '/chat': typeof ChatRoute
+  '/guide': typeof GuideRoute
   '/labs': typeof LabsRoute
   '/recommend': typeof RecommendRoute
   '/search': typeof SearchRoute
@@ -116,6 +125,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/certification'
     | '/chat'
+    | '/guide'
     | '/labs'
     | '/recommend'
     | '/search'
@@ -128,6 +138,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/certification'
     | '/chat'
+    | '/guide'
     | '/labs'
     | '/recommend'
     | '/search'
@@ -140,6 +151,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/certification'
     | '/chat'
+    | '/guide'
     | '/labs'
     | '/recommend'
     | '/search'
@@ -153,6 +165,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CertificationRoute: typeof CertificationRoute
   ChatRoute: typeof ChatRoute
+  GuideRoute: typeof GuideRoute
   LabsRoute: typeof LabsRoute
   RecommendRoute: typeof RecommendRoute
   SearchRoute: typeof SearchRoute
@@ -195,6 +208,13 @@ declare module '@tanstack/react-router' {
       path: '/chat'
       fullPath: '/chat'
       preLoaderRoute: typeof ChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guide': {
+      id: '/guide'
+      path: '/guide'
+      fullPath: '/guide'
+      preLoaderRoute: typeof GuideRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/labs': {
@@ -241,6 +261,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CertificationRoute: CertificationRoute,
   ChatRoute: ChatRoute,
+  GuideRoute: GuideRoute,
   LabsRoute: LabsRoute,
   RecommendRoute: RecommendRoute,
   SearchRoute: SearchRoute,
