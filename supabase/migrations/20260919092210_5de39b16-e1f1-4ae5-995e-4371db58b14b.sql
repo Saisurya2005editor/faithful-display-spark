@@ -1,0 +1,1 @@
+ALTER TABLE public.labs ADD COLUMN IF NOT EXISTS data_origin text NOT NULL DEFAULT 'Sample';
