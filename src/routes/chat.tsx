@@ -111,7 +111,7 @@ const confidenceStyles: Record<Confidence, string> = {
 };
 
 function ChatPage() {
-  const { t, lang } = useI18n();
+  const { t, lang, setLang } = useI18n();
   const navigate = useNavigate();
   const { q } = Route.useSearch();
 
@@ -211,7 +211,7 @@ function ChatPage() {
                               confidence: payload.confidence,
                               followups: payload.followups,
                               retrievedCount: payload.retrievedCount,
-                              retrieved: payload.retrieved,
+                              ...(payload.retrieved ? { retrieved: payload.retrieved } : {}),
                             }
                           : m,
                       ),
@@ -244,6 +244,7 @@ function ChatPage() {
       const timer = window.setTimeout(() => send(demo.query), 50);
       return () => window.clearTimeout(timer);
     }
+    return undefined;
   }, [lang, setLang, send]);
 
   // Load saved conversations: Lovable Cloud for signed-in users, localStorage for guests.
