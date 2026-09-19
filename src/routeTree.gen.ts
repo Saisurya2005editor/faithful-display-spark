@@ -10,13 +10,21 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as CertificationRouteImport } from './routes/certification'
 import { Route as ChatRouteImport } from './routes/chat'
+import { Route as LabsRouteImport } from './routes/labs'
 import { Route as RecommendRouteImport } from './routes/recommend'
+import { Route as SearchRouteImport } from './routes/search'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CertificationRoute = CertificationRouteImport.update({
@@ -29,44 +37,88 @@ const ChatRoute = ChatRouteImport.update({
   path: '/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LabsRoute = LabsRouteImport.update({
+  id: '/labs',
+  path: '/labs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecommendRoute = RecommendRouteImport.update({
   id: '/recommend',
   path: '/recommend',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/certification': typeof CertificationRoute
   '/chat': typeof ChatRoute
+  '/labs': typeof LabsRoute
   '/recommend': typeof RecommendRoute
+  '/search': typeof SearchRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/certification': typeof CertificationRoute
   '/chat': typeof ChatRoute
+  '/labs': typeof LabsRoute
   '/recommend': typeof RecommendRoute
+  '/search': typeof SearchRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/certification': typeof CertificationRoute
   '/chat': typeof ChatRoute
+  '/labs': typeof LabsRoute
   '/recommend': typeof RecommendRoute
+  '/search': typeof SearchRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/certification' | '/chat' | '/recommend'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/certification'
+    | '/chat'
+    | '/labs'
+    | '/recommend'
+    | '/search'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/certification' | '/chat' | '/recommend'
-  id: '__root__' | '/' | '/certification' | '/chat' | '/recommend'
+  to:
+    | '/'
+    | '/about'
+    | '/certification'
+    | '/chat'
+    | '/labs'
+    | '/recommend'
+    | '/search'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/certification'
+    | '/chat'
+    | '/labs'
+    | '/recommend'
+    | '/search'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
   CertificationRoute: typeof CertificationRoute
   ChatRoute: typeof ChatRoute
+  LabsRoute: typeof LabsRoute
   RecommendRoute: typeof RecommendRoute
+  SearchRoute: typeof SearchRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -76,6 +128,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/certification': {
@@ -92,6 +151,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/labs': {
+      id: '/labs'
+      path: '/labs'
+      fullPath: '/labs'
+      preLoaderRoute: typeof LabsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/recommend': {
       id: '/recommend'
       path: '/recommend'
@@ -99,14 +165,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RecommendRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
   CertificationRoute: CertificationRoute,
   ChatRoute: ChatRoute,
+  LabsRoute: LabsRoute,
   RecommendRoute: RecommendRoute,
+  SearchRoute: SearchRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
