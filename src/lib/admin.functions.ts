@@ -209,6 +209,7 @@ export const ingestDocument = createServerFn({ method: "POST" })
       document_id: doc.id,
       chunk_text: c.text,
       clause_ref: c.clauseRef,
+      heading: c.heading,
       embedding: `[${embeddings[i]!.join(",")}]`,
       language: "en",
     }));
