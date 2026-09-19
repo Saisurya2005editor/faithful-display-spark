@@ -204,17 +204,22 @@ ${list.map((l) => `- **${l.name}**, ${l.city}, ${l.state} — ${l.recognizedScop
   };
 }
 
+const clauseOf = (s: BISStandard) => s.clauses[0] ?? { ref: "General", heading: "General", excerpt: s.summary };
+
 function standardsAnswer(lang: Lang, matches: BISStandard[]): AnswerPayload {
   const top = matches.slice(0, 3);
   const primary = top[0];
+  if (!primary) return noSourceAnswer(lang);
+  const pc = clauseOf(primary);
   const scheme = getScheme(primary.schemeId);
+  const bullets = top.map((s) => `- ${enforcementLine(s, lang)} [${s.standardNumber}, ${clauseOf(s).ref}]`).join("\n");
   const answer = L(
     lang,
     `Based on the indexed BIS sources, these Indian Standards apply:
 
-${top.map((s) => `- ${enforcementLine(s, lang)} [${s.standardNumber}, ${s.clauses[0].ref}]`).join("\n")}
+${bullets}
 
-**Key requirement:** ${primary.clauses[0].excerpt} [${primary.standardNumber}, ${primary.clauses[0].ref}]
+**Key requirement:** ${pc.excerpt} [${primary.standardNumber}, ${pc.ref}]
 
 **Typical tests:** ${primary.tests.join(", ")}.
 
@@ -225,9 +230,9 @@ ${
 }`,
     `अनुक्रमित BIS स्रोतों के अनुसार ये भारतीय मानक लागू होते हैं:
 
-${top.map((s) => `- ${enforcementLine(s, lang)} [${s.standardNumber}, ${s.clauses[0].ref}]`).join("\n")}
+${bullets}
 
-**मुख्य आवश्यकता:** ${primary.clauses[0].excerpt} [${primary.standardNumber}, ${primary.clauses[0].ref}]
+**मुख्य आवश्यकता:** ${pc.excerpt} [${primary.standardNumber}, ${pc.ref}]
 
 **सामान्य परीक्षण:** ${primary.tests.join(", ")}।
 
@@ -238,9 +243,9 @@ ${
 }`,
     `ఇండెక్స్ చేసిన BIS మూలాల ప్రకారం ఈ భారతీయ ప్రమాణాలు వర్తిస్తాయి:
 
-${top.map((s) => `- ${enforcementLine(s, lang)} [${s.standardNumber}, ${s.clauses[0].ref}]`).join("\n")}
+${bullets}
 
-**ప్రధాన అవసరం:** ${primary.clauses[0].excerpt} [${primary.standardNumber}, ${primary.clauses[0].ref}]
+**ప్రధాన అవసరం:** ${pc.excerpt} [${primary.standardNumber}, ${pc.ref}]
 
 **సాధారణ పరీక్షలు:** ${primary.tests.join(", ")}.
 
