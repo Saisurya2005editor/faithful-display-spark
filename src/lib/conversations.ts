@@ -91,16 +91,17 @@ export async function loadRemoteConversations(): Promise<{
   const byConv = new Map<string, StoredMessage[]>();
   for (const m of (msgs ?? []) as unknown as MsgRow[]) {
     const list = byConv.get(m.conversation_id) ?? [];
-    list.push({
+    const msg: StoredMessage = {
       id: m.id,
       role: m.role === "assistant" ? "assistant" : "user",
       content: m.content,
-      citations: m.citations?.citations,
-      confidence: m.confidence ?? undefined,
-      followups: m.citations?.followups,
-      retrievedCount: m.citations?.retrievedCount,
-      rating: m.citations?.rating,
-    });
+    };
+    if (m.citations?.citations) msg.citations = m.citations.citations;
+    if (m.confidence) msg.confidence = m.confidence;
+    if (m.citations?.followups) msg.followups = m.citations.followups;
+    if (typeof m.citations?.retrievedCount === "number") msg.retrievedCount = m.citations.retrievedCount;
+    if (m.citations?.rating) msg.rating = m.citations.rating;
+    list.push(msg);
     byConv.set(m.conversation_id, list);
   }
 
@@ -130,12 +131,14 @@ export async function saveRemoteConversation(
         role: m.role,
         content: m.content,
         confidence: m.confidence ?? null,
-        citations: {
-          citations: m.citations ?? [],
-          followups: m.followups ?? [],
-          retrievedCount: m.retrievedCount ?? null,
-          rating: m.rating ?? null,
-        },
+        citations: JSON.parse(
+          JSON.stringify({
+            citations: m.citations ?? [],
+            followups: m.followups ?? [],
+            retrievedCount: m.retrievedCount ?? null,
+            rating: m.rating ?? null,
+          }),
+        ),
       })),
     );
   } catch {
