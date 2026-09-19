@@ -342,7 +342,7 @@ export const getInsights = createServerFn({ method: "GET" })
  * ------------------------------------------------------------------ */
 
 const TEST_HINT = /\b(test|tests|testing|requirement|limit|tolerance|shall not exceed|minimum|maximum|sampling)\b/i;
-const METHOD_RE = /\bIS\s?\d{2,5}(?:\s?\([^)]{1,20}\))?(?:\s?[:\-]\s?\d{4})?(?:\s?Part\s?\d+)?/i;
+const METHOD_RE = /\bIS\s?\d{2,5}(?:\s?\(\s?Part\s?\d+\s?\))?(?:\s?[:\-]\s?\d{4})?/i;
 const LIMIT_RE =
   /\b\d+(?:\.\d+)?\s?(?:%|per\s?cent|mg\/l|mg\/kg|ppm|µm|um|mm|cm|m|kg|g|n\/mm2|mpa|kpa|kv|v|a|ma|w|kw|hz|°c|deg\s?c|min|minutes|h|hours|s|seconds|litre|l)\b/i;
 
@@ -371,7 +371,11 @@ export const suggestTests = createServerFn({ method: "POST" })
           .split(/(?<=[.;])\s+/)
           .find((s: string) => /\bshall\b/i.test(s) && (LIMIT_RE.test(s) || TEST_HINT.test(s))) ?? "";
       if (!sentence) continue;
-      const name = (heading && heading.length > 3 ? heading : sentence.slice(0, 70)).replace(/\s+/g, " ");
+      // Only use the clause heading when it reads like a title, otherwise fall
+      // back to the clause reference so names never look truncated.
+      const name = /^[A-Z][A-Za-z]/.test(heading)
+        ? heading.replace(/\s+/g, " ")
+        : `Requirement at ${r.clause_ref ?? "General"}`;
       const key = `${r.clause_ref}|${name}`.toLowerCase();
       if (seen.has(key)) continue;
       seen.add(key);
