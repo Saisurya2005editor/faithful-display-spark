@@ -254,6 +254,69 @@ export const searchDocuments = createServerFn({ method: "POST" })
     return { ranked };
   });
 
+export interface StandardRecord {
+  id: string;
+  standardNumber: string;
+  title: string;
+  division: string;
+  sector: string;
+  year: number;
+  status: string;
+  enforcement: string;
+  summary: string;
+  tags: string[];
+  sourceUrl: string;
+  dataOrigin: "Sample" | "Verified source";
+  clauses: { ref: string; heading: string; excerpt: string }[];
+}
+
+/** Public catalogue of the indexed Indian Standards, with their clause chunks. */
+export const listStandards = createServerFn({ method: "GET" }).handler(
+  async (): Promise<{ standards: StandardRecord[] }> => {
+    const client = db();
+    const { data: docs, error } = await client
+      .from("documents")
+      .select("id,standard_number,title,division,sector,year,status,enforcement,summary,tags,source_url,data_origin")
+      .order("standard_number", { ascending: true });
+    if (error) throw new Error(`Could not load standards: ${error.message}`);
+
+    const { data: chunkRows } = await client
+      .from("chunks")
+      .select("document_id,clause_ref,heading,chunk_text")
+      .limit(1000);
+
+    const clausesByDoc = new Map<string, StandardRecord["clauses"]>();
+    for (const row of chunkRows ?? []) {
+      const list = clausesByDoc.get(row.document_id) ?? [];
+      if (list.length >= 5) continue;
+      list.push({
+        ref: row.clause_ref ?? "—",
+        heading: row.heading ?? "Extract",
+        excerpt: (row.chunk_text ?? "").slice(0, 420),
+      });
+      clausesByDoc.set(row.document_id, list);
+    }
+
+    return {
+      standards: (docs ?? []).map((d) => ({
+        id: d.id,
+        standardNumber: d.standard_number,
+        title: d.title,
+        division: d.division ?? "—",
+        sector: d.sector ?? "—",
+        year: d.year ?? 0,
+        status: d.status ?? "Active",
+        enforcement: d.enforcement ?? "Voluntary",
+        summary: d.summary ?? "",
+        tags: d.tags ?? [],
+        sourceUrl: d.source_url ?? "https://www.bis.gov.in/",
+        dataOrigin: d.data_origin === "Verified source" ? "Verified source" : "Sample",
+        clauses: clausesByDoc.get(d.id) ?? [],
+      })),
+    };
+  },
+);
+
 export const saveFeedback = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z

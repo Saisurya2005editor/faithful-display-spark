@@ -6,6 +6,7 @@
  */
 
 export type StandardStatus = "Active" | "Superseded" | "Under revision";
+export type DataOrigin = "Sample" | "Verified source";
 export type Enforcement = "ISI Mark (Mandatory)" | "CRS (Mandatory)" | "Hallmarking (Mandatory)" | "Voluntary";
 
 export interface BISStandard {
