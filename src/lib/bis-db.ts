@@ -121,6 +121,7 @@ export function useStandards(): { standards: BISStandard[]; loading: boolean } {
     let cancelled = false;
     void listStandards()
       .then(({ standards }) => {
+        console.error("listStandards ok", standards.length, cancelled);
         if (cancelled || standards.length === 0) return;
         setRemote(
           standards.map((s) => ({
