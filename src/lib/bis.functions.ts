@@ -16,8 +16,8 @@ import { chatComplete, embedTexts, translateToEnglish } from "./ai-gateway.serve
 
 function db() {
   return createClient(
-    import.meta.env.VITE_SUPABASE_URL!,
-    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY!,
+    import.meta.env["VITE_SUPABASE_URL"]!,
+    import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"]!,
     { auth: { persistSession: false, autoRefreshToken: false } },
   );
 }
@@ -55,6 +55,7 @@ const LANG_NAMES: Record<Lang, string> = { en: "English", hi: "Hindi", te: "Telu
 
 async function retrieve(queryEn: string, matchCount: number): Promise<MatchedChunk[]> {
   const [embedding] = await embedTexts([queryEn]);
+  if (!embedding) throw new Error("Embedding service returned no vector");
   const { data, error } = await db().rpc("match_chunks", {
     query_embedding: `[${embedding.join(",")}]`,
     query_text: queryEn,
