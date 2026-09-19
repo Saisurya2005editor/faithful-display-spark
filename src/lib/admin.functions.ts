@@ -19,12 +19,15 @@ const IngestInput = z.object({
 });
 
 async function requireAdmin(supabase: any, userId: string) {
-  const { data: isAdmin, error } = await supabase.rpc("has_role", {
-    _user_id: userId,
-    _role: "admin",
-  });
+  // RLS lets each user read only their own role rows, so a returned row means admin.
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("role", "admin")
+    .maybeSingle();
   if (error) throw new Error(`Role check failed: ${error.message}`);
-  if (!isAdmin) throw new Response("Forbidden: admin role required", { status: 403 });
+  if (!data) throw new Response("Forbidden: admin role required", { status: 403 });
 }
 
 function base64ToBytes(b64: string): Uint8Array {
@@ -63,12 +66,14 @@ export const getAdminStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context as any;
-    const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
-    const { count } = await supabase
+    const { data: ownAdmin } = await supabase
       .from("user_roles")
-      .select("id", { count: "exact", head: true })
-      .eq("role", "admin");
-    return { isAdmin: !!isAdmin, adminExists: (count ?? 0) > 0 };
+      .select("id")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    const { data: adminExists } = await supabase.rpc("admin_exists");
+    return { isAdmin: !!ownAdmin, adminExists: !!adminExists };
   });
 
 export const claimFirstAdmin = createServerFn({ method: "POST" })
