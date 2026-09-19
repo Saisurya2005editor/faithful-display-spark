@@ -68,7 +68,7 @@ function SearchPage() {
 
   const results = useMemo(() => {
     const q = query.trim();
-    const filtered = (q ? findStandards(query) : standards)
+    const filtered = (q ? matchStandards(standards, query) : standards)
       .filter((s) => (sector === "all" ? true : s.sector === sector))
       .filter((s) => (division === "all" ? true : s.division === division))
       .filter((s) => (year === "all" ? true : String(s.year) === year))
@@ -80,7 +80,7 @@ function SearchPage() {
         .map((s) => ({ s, relevance: rel(s) || 41 }));
     }
     return filtered.map((s, i) => ({ s, relevance: q ? Math.max(52, 97 - i * 6) : 100 - i }));
-  }, [query, sector, division, year, status, semantic]);
+  }, [standards, query, sector, division, year, status, semantic]);
 
   const reset = () => {
     setQuery("");

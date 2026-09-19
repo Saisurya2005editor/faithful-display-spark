@@ -60,7 +60,7 @@ export function useLabs(): TestingLab[] {
           contact: "",
           email: "",
           sourceUrl: r.source_url,
-          dataOrigin: (r.data_origin === "Verified source" ? "Verified source" : "Sample") as const,
+          dataOrigin: r.data_origin === "Verified source" ? ("Verified source" as const) : ("Sample" as const),
         })),
       );
     })();
@@ -90,7 +90,7 @@ export function useSchemes(): BISScheme[] {
           steps: Array.isArray(r.steps) ? r.steps : [],
           documentsRequired: r.documents_required ?? [],
           sourceUrl: r.source_url,
-          dataOrigin: (r.data_origin === "Verified source" ? "Verified source" : "Sample") as const,
+          dataOrigin: r.data_origin === "Verified source" ? ("Verified source" as const) : ("Sample" as const),
         })),
       );
     })();
