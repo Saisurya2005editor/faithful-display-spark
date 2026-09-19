@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Database,
   FileText,
+  FlaskConical,
   FileUp,
   Loader2,
   Pencil,
@@ -26,6 +27,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { DocumentLinks } from "@/components/admin/DocumentLinks";
 import {
   deleteDocument,
   ingestDocument,
@@ -103,6 +105,7 @@ function IngestBody() {
   const [busy, setBusy] = useState(false);
   const [query, setQuery] = useState("");
   const [editing, setEditing] = useState<IndexedDoc | null>(null);
+  const [linking, setLinking] = useState<IndexedDoc | null>(null);
   const [saving, setSaving] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -415,6 +418,16 @@ function IngestBody() {
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditing(d)} aria-label="Edit">
                         <Pencil className="h-4 w-4" />
                       </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => setLinking(d)}
+                        aria-label="Tests and products"
+                        title="Tests and product links"
+                      >
+                        <FlaskConical className="h-4 w-4" />
+                      </Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => reindex(d.id)} aria-label="Re-index">
                         <RefreshCw className="h-4 w-4" />
                       </Button>
@@ -435,6 +448,19 @@ function IngestBody() {
           </table>
         </div>
       </section>
+
+      <Dialog open={!!linking} onOpenChange={(open) => !open && setLinking(null)}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Clauses, tests and products</DialogTitle>
+            <DialogDescription>
+              Link {linking?.standard_number} to the products it covers and record the tests and acceptable limits its
+              clauses require. These power the product guide.
+            </DialogDescription>
+          </DialogHeader>
+          {linking && <DocumentLinks documentId={linking.id} standardNumber={linking.standard_number} />}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
         <DialogContent className="sm:max-w-lg">
