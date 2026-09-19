@@ -3,9 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   labs as localLabs,
   schemes as localSchemes,
+  standards as localStandards,
   type BISScheme,
+  type BISStandard,
+  type Enforcement,
+  type StandardStatus,
   type TestingLab,
 } from "@/data/bis-data";
+import { listStandards } from "@/lib/bis.functions";
 
 /**
  * Read reference data (labs, schemes) from Lovable Cloud when available,
