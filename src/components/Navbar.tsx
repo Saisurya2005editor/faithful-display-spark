@@ -114,6 +114,7 @@ export function Navbar() {
                     Admin
                   </Link>
                 )}
+                {user ? (
                   <button
                     type="button"
                     onClick={() => {
