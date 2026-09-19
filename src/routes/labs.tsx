@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageShell } from "@/components/PageShell";
 import { useI18n } from "@/lib/i18n";
-import { labs } from "@/data/bis-data";
+import { useLabs } from "@/lib/bis-db";
 
 export const Route = createFileRoute("/labs")({
   head: () => ({
@@ -31,12 +31,12 @@ export const Route = createFileRoute("/labs")({
   component: LabsPage,
 });
 
-const states = Array.from(new Set(labs.map((l) => l.state))).sort();
-
 function LabsPage() {
   const { t } = useI18n();
+  const labs = useLabs();
   const [query, setQuery] = useState("");
   const [state, setState] = useState("all");
+  const states = useMemo(() => Array.from(new Set(labs.map((l) => l.state))).sort(), [labs]);
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -49,7 +49,7 @@ function LabsPage() {
             l.city.toLowerCase().includes(q)
           : true,
       );
-  }, [query, state]);
+  }, [labs, query, state]);
 
   return (
     <PageShell title={t("labs.title")} subtitle={t("labs.subtitle")}>

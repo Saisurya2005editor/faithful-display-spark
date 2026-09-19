@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { PageShell } from "@/components/PageShell";
 import { useI18n } from "@/lib/i18n";
-import { schemes, type BISScheme } from "@/data/bis-data";
+import { type BISScheme } from "@/data/bis-data";
+import { useSchemes } from "@/lib/bis-db";
 
 export const Route = createFileRoute("/certification")({
   head: () => ({
@@ -31,6 +32,7 @@ export const Route = createFileRoute("/certification")({
 
 function CertificationPage() {
   const { t } = useI18n();
+  const schemes = useSchemes();
   const [selected, setSelected] = useState<BISScheme | null>(null);
 
   return (
