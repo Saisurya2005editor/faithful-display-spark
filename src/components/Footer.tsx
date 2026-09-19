@@ -23,6 +23,9 @@ export function Footer() {
             <Link to="/recommend" className="text-muted-foreground hover:text-foreground">
               {t("nav.recommend")}
             </Link>
+            <Link to="/guide" className="text-muted-foreground hover:text-foreground">
+              {t("nav.guide")}
+            </Link>
             <Link to="/certification" className="text-muted-foreground hover:text-foreground">
               {t("nav.certification")}
             </Link>

@@ -269,6 +269,7 @@ export type Database = {
           created_at: string
           id: string
           mandatory: boolean | null
+          product_category: string | null
           product_keywords: string[]
           scheme_key: string | null
           standard_number: string
@@ -277,6 +278,7 @@ export type Database = {
           created_at?: string
           id?: string
           mandatory?: boolean | null
+          product_category?: string | null
           product_keywords?: string[]
           scheme_key?: string | null
           standard_number: string
@@ -285,6 +287,7 @@ export type Database = {
           created_at?: string
           id?: string
           mandatory?: boolean | null
+          product_category?: string | null
           product_keywords?: string[]
           scheme_key?: string | null
           standard_number?: string
@@ -332,6 +335,56 @@ export type Database = {
           steps?: Json | null
         }
         Relationships: []
+      }
+      standard_tests: {
+        Row: {
+          clause_ref: string | null
+          created_at: string
+          data_origin: string
+          document_id: string | null
+          id: string
+          method: string | null
+          product_category: string | null
+          requirement: string | null
+          standard_number: string
+          test_name: string
+          updated_at: string
+        }
+        Insert: {
+          clause_ref?: string | null
+          created_at?: string
+          data_origin?: string
+          document_id?: string | null
+          id?: string
+          method?: string | null
+          product_category?: string | null
+          requirement?: string | null
+          standard_number: string
+          test_name: string
+          updated_at?: string
+        }
+        Update: {
+          clause_ref?: string | null
+          created_at?: string
+          data_origin?: string
+          document_id?: string | null
+          id?: string
+          method?: string | null
+          product_category?: string | null
+          requirement?: string | null
+          standard_number?: string
+          test_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "standard_tests_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
