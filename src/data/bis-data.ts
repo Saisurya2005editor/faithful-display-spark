@@ -25,7 +25,7 @@ export interface BISStandard {
   relatedStandards: string[];
   schemeId: string;
   sourceUrl: string;
-  dataOrigin: "Sample";
+  dataOrigin: DataOrigin;
 }
 
 export interface BISScheme {
@@ -37,7 +37,7 @@ export interface BISScheme {
   documentsRequired: string[];
   steps: { title: string; detail: string; duration: string }[];
   sourceUrl: string;
-  dataOrigin: "Sample";
+  dataOrigin: DataOrigin;
 }
 
 export interface TestingLab {
@@ -49,7 +49,7 @@ export interface TestingLab {
   contact: string;
   email: string;
   sourceUrl: string;
-  dataOrigin: "Sample";
+  dataOrigin: DataOrigin;
 }
 
 const BIS_SOURCE = "https://www.bis.gov.in";
