@@ -233,10 +233,8 @@ export const saveFeedback = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const { error } = await db().from("feedback").insert({
-      question: data.question,
-      answer: data.answer,
-      rating: data.rating,
-      lang: data.lang,
+      rating: data.rating === "up" ? 1 : -1,
+      comment: `Lang: ${data.lang}\nQ: ${data.question}\n\nA: ${data.answer}`.slice(0, 6000),
     });
     if (error) throw new Error(`Could not save feedback: ${error.message}`);
     return { ok: true };
