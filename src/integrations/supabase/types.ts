@@ -330,6 +330,10 @@ export type Database = {
           title: string
         }[]
       }
+      set_chunk_embedding: {
+        Args: { _embedding: string; _id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
