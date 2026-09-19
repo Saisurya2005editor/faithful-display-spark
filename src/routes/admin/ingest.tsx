@@ -344,11 +344,23 @@ function IngestBody() {
 
       {/* Indexed documents */}
       <section className="mt-10">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Indexed documents ({docs.length})</h2>
-          <Button variant="ghost" size="sm" onClick={refreshDocs}>
-            <RefreshCw className="mr-1.5 h-4 w-4" /> Refresh
-          </Button>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold">Indexed documents ({visibleDocs.length})</h2>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+              <Input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search documents"
+                aria-label="Search documents"
+                className="w-48 pl-8"
+              />
+            </div>
+            <Button variant="ghost" size="sm" onClick={refreshDocs}>
+              <RefreshCw className="mr-1.5 h-4 w-4" /> Refresh
+            </Button>
+          </div>
         </div>
         <div className="mt-3 overflow-x-auto rounded-xl border border-border">
           <table className="w-full min-w-[720px] text-sm">
