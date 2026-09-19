@@ -232,6 +232,43 @@ function ChatPage() {
     }
   }, [q, send, navigate]);
 
+  // Load saved conversations: Lovable Cloud for signed-in users, localStorage for guests.
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const remote = await loadRemoteConversations().catch(() => null);
+      if (cancelled) return;
+      if (remote) {
+        setUserId(remote.userId);
+        const convs = remote.conversations as unknown as Conversation[];
+        if (convs.length > 0) {
+          setConversations(convs);
+          setActiveId(convs[0]!.id);
+        }
+        return;
+      }
+      const local = loadLocalConversations();
+      if (local && local.length > 0) {
+        setConversations(local as Conversation[]);
+        setActiveId(local[0]!.id);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Persist: guests -> localStorage immediately; signed-in -> also sync to cloud (debounced).
+  useEffect(() => {
+    saveLocalConversations(conversations);
+    if (!userId) return;
+    const timer = window.setTimeout(() => {
+      const c = conversations.find((x) => x.id === activeId);
+      if (c && c.messages.length > 0) void saveRemoteConversation(userId, c, lang);
+    }, 1500);
+    return () => window.clearTimeout(timer);
+  }, [conversations, activeId, userId, lang]);
+
   useEffect(() => {
     threadEnd.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [active?.messages, pending]);
