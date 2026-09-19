@@ -211,6 +211,7 @@ function ChatPage() {
                               confidence: payload.confidence,
                               followups: payload.followups,
                               retrievedCount: payload.retrievedCount,
+                              retrieved: payload.retrieved,
                             }
                           : m,
                       ),
@@ -233,6 +234,17 @@ function ChatPage() {
       navigate({ to: "/chat", search: {}, replace: true });
     }
   }, [q, send, navigate]);
+
+  // Demo Mode handoff: a staged one-click demo query (Shift+D panel).
+  useEffect(() => {
+    const demo = consumeDemoQuery();
+    if (demo && !seeded.current) {
+      seeded.current = true;
+      if (demo.lang !== lang) setLang(demo.lang);
+      const timer = window.setTimeout(() => send(demo.query), 50);
+      return () => window.clearTimeout(timer);
+    }
+  }, [lang, setLang, send]);
 
   // Load saved conversations: Lovable Cloud for signed-in users, localStorage for guests.
   useEffect(() => {
