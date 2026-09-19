@@ -12,7 +12,8 @@ type State = "loading" | "signedOut" | "denied" | "claimable" | "admin";
 
 /** Guards /admin/* pages: only admins may see the children. */
 export function AdminGate({ children }: { children: ReactNode }) {
-  const { user, loading } = useAuthUser();
+  const { user, ready: loading0 } = useAuthUser();
+  const loading = !loading0;
   const [state, setState] = useState<State>("loading");
 
   useEffect(() => {
