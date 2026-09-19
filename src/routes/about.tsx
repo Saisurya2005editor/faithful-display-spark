@@ -77,20 +77,20 @@ function AboutPage() {
 
         <section>
           <div className="flex flex-wrap items-center gap-3">
-            <h2 className="text-lg font-semibold">Demo data</h2>
+            <h2 className="text-lg font-semibold">Indexed data</h2>
             <Badge variant="outline" className="uppercase">
-              {t("common.sample")}
+              {t("common.verified")}
             </Badge>
           </div>
           <p className="mt-2 text-sm text-muted-foreground">
-            This demo runs entirely on a curated sample dataset that mirrors real BIS content. Nothing here should be
-            treated as an official record.
+            BISmart answers from the text of real Indian Standards published in the public domain, plus BIS scheme and
+            laboratory information taken from bis.gov.in. Always confirm against the official BIS record before acting.
           </p>
           <div className="mt-5 grid gap-4 sm:grid-cols-3">
             {[
-              { n: standards.length, label: "Sample standards across electrical, construction, food, toys and precious metals" },
-              { n: schemes.length, label: "Certification and recognition schemes with steps and documents" },
-              { n: labs.length, label: "Sample testing laboratories across Indian states" },
+              { n: dbStandards.length, label: "Indian Standards indexed clause by clause, across electrical, construction, water, toys and steel" },
+              { n: schemes.length, label: "BIS certification and recognition schemes with steps and documents" },
+              { n: labs.length, label: "BIS laboratories across Indian states" },
             ].map((s) => (
               <div key={s.label} className="card-surface p-5">
                 <p className="text-3xl font-bold">{s.n}</p>
