@@ -127,6 +127,9 @@ ${context ? `SOURCES:\n${context}` : "SOURCES: (none retrieved)"}`;
         .slice(0, 3);
     }
 
+    const toOrigin = (v: string | null | undefined): "Sample" | "Verified source" =>
+      v === "Verified source" ? "Verified source" : "Sample";
+
     const citations: RagCitation[] = [];
     const seen = new Set<string>();
     for (const c of chunks) {
@@ -139,16 +142,37 @@ ${context ? `SOURCES:\n${context}` : "SOURCES: (none retrieved)"}`;
         clauseRef: c.clause_ref,
         excerpt: c.chunk_text,
         sourceUrl: c.source_url,
-        origin: "Sample",
+        origin: toOrigin(c.data_origin),
       });
       if (citations.length >= 4) break;
     }
+
+    const retrieved: RetrievedChunk[] = chunks.slice(0, 8).map((c) => ({
+      standardNumber: c.standard_number,
+      clauseRef: c.clause_ref,
+      title: c.title,
+      score: Math.round(c.score * 100) / 100,
+      excerpt: c.chunk_text.slice(0, 500),
+      origin: toOrigin(c.data_origin),
+    }));
 
     const topScore = chunks[0]?.score ?? 0;
     const confidence: RagAnswer["confidence"] =
       chunks.length >= 3 && topScore > 0.35 ? "High" : chunks.length >= 1 ? "Medium" : "Low";
 
-    return { answer, citations, confidence, followups, retrievedCount: chunks.length };
+    // Log usage for the admin insights page (best-effort).
+    void db()
+      .from("analytics_events")
+      .insert({
+        question: query.slice(0, 500),
+        lang,
+        confidence,
+        retrieved_count: chunks.length,
+        top_standard: chunks[0]?.standard_number ?? null,
+      })
+      .then(() => undefined, () => undefined);
+
+    return { answer, citations, confidence, followups, retrievedCount: chunks.length, retrieved };
   });
 
 export const recommendProduct = createServerFn({ method: "POST" })
