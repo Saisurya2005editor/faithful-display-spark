@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 const links = [
   { to: "/chat", key: "nav.chat" },
   { to: "/recommend", key: "nav.recommend" },
+  { to: "/guide", key: "nav.guide" },
   { to: "/certification", key: "nav.certification" },
   { to: "/search", key: "nav.search" },
   { to: "/labs", key: "nav.labs" },
