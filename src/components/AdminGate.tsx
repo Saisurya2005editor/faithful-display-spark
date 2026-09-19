@@ -54,9 +54,9 @@ export function AdminGate({ children }: { children: ReactNode }) {
   } else if (state === "signedOut") {
     body = (
       <Centered icon={<ShieldAlert className="h-6 w-6 text-accent" />} title="Sign in required">
-        <p className="mt-2 text-sm text-muted-foreground">Admin tools need a signed-in account.</p>
+        <p className="mt-2 text-sm text-muted-foreground">Admin tools need an admin account.</p>
         <Button asChild className="mt-4">
-          <Link to="/auth">Sign in</Link>
+          <Link to="/admin/login">Admin sign in</Link>
         </Button>
       </Centered>
     );

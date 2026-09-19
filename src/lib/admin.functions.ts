@@ -141,11 +141,20 @@ export const listIndexedDocuments = createServerFn({ method: "GET" })
       .select("id, standard_number, title, division, year, source_url, summary, data_origin, created_at")
       .order("created_at", { ascending: false });
     if (error) throw new Error(`Could not list documents: ${error.message}`);
-    const { data: chunkRows, error: cErr } = await supabase.from("chunks").select("document_id");
-    if (cErr) throw new Error(`Could not count chunks: ${cErr.message}`);
+    // Page through chunks: a plain select is capped at 1000 rows, which silently
+    // reported 0 clauses for documents beyond that cap.
     const counts = new Map<string, number>();
-    for (const row of chunkRows ?? []) {
-      counts.set(row.document_id, (counts.get(row.document_id) ?? 0) + 1);
+    const pageSize = 1000;
+    for (let from = 0; ; from += pageSize) {
+      const { data: chunkRows, error: cErr } = await supabase
+        .from("chunks")
+        .select("document_id")
+        .range(from, from + pageSize - 1);
+      if (cErr) throw new Error(`Could not count chunks: ${cErr.message}`);
+      for (const row of chunkRows ?? []) {
+        counts.set(row.document_id, (counts.get(row.document_id) ?? 0) + 1);
+      }
+      if (!chunkRows || chunkRows.length < pageSize) break;
     }
     return (docs ?? []).map((d: any) => ({ ...d, chunkCount: counts.get(d.id) ?? 0 }));
   });
@@ -365,6 +374,10 @@ export const suggestTests = createServerFn({ method: "POST" })
     for (const r of (rows ?? []) as any[]) {
       const text: string = r.chunk_text ?? "";
       const heading: string = (r.heading ?? "").trim();
+      const clause: string = (r.clause_ref ?? "").trim();
+      // Front matter (foreword, scope, publisher lines) carries no testable requirement.
+      if (/^clause\s*0\b/i.test(clause)) continue;
+      if (/^(foreword|scope|contents|bis\b|bureau of indian standards)/i.test(heading)) continue;
       if (!TEST_HINT.test(`${heading} ${text}`)) continue;
       const sentence =
         text
