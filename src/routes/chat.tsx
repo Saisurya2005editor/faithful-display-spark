@@ -156,11 +156,22 @@ function ChatPage() {
       setInput("");
       setPending(true);
 
-      const payload = generateAnswer(text, lang);
-      const assistantId = uid();
+      const history = (active?.messages ?? [])
+        .slice(-6)
+        .map((m) => ({ role: m.role, content: m.content }));
 
-      // Simulated streaming: reveal the answer progressively.
-      window.setTimeout(() => {
+      void (async () => {
+        let payload: AnswerPayload;
+        try {
+          payload = await askBis({ data: { query: text, lang, history } });
+        } catch {
+          toast.error(t("chat.liveUnavailable"));
+          payload = generateAnswer(text, lang);
+        }
+
+        const assistantId = uid();
+
+        // Simulated streaming: reveal the answer progressively.
         updateActive((c) => ({
           ...c,
           messages: [...c.messages, { id: assistantId, role: "assistant", content: "" }],
@@ -207,9 +218,9 @@ function ChatPage() {
             setPending(false);
           }
         }, 45);
-      }, 700);
+      })();
     },
-    [activeId, lang, pending, updateActive],
+    [activeId, active?.messages, lang, pending, updateActive, t],
   );
 
   // Seed the thread from ?q= (landing page chips, recommender handoff).
