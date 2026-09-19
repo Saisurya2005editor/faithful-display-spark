@@ -68,6 +68,7 @@ interface IndexedDoc {
   division: string | null;
   year: number | null;
   source_url: string | null;
+  summary: string | null;
   data_origin: string;
   created_at: string;
   chunkCount: number;
@@ -100,6 +101,9 @@ function IngestBody() {
   const [docs, setDocs] = useState<IndexedDoc[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [query, setQuery] = useState("");
+  const [editing, setEditing] = useState<IndexedDoc | null>(null);
+  const [saving, setSaving] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
   const refreshDocs = useCallback(() => {
