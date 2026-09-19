@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageShell } from "@/components/PageShell";
 import { useI18n } from "@/lib/i18n";
-import { findStandards, getScheme, productCategories, standards, type BISStandard } from "@/data/bis-data";
+import { getScheme, productCategories, type BISStandard } from "@/data/bis-data";
+import { matchStandards, useStandards } from "@/lib/bis-db";
 import { recommendProduct } from "@/lib/bis.functions";
 
 export const Route = createFileRoute("/recommend")({
