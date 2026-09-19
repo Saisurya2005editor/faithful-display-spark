@@ -526,6 +526,42 @@ function ChatPage() {
                       </div>
                     )}
 
+                    {m.retrieved && m.retrieved.length > 0 && (
+                      <details className="group rounded-xl border border-border bg-card">
+                        <summary className="cursor-pointer list-none px-4 py-2.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground [&::-webkit-details-marker]:hidden">
+                          <span className="inline-flex items-center gap-2">
+                            <Search className="h-3.5 w-3.5 text-accent" aria-hidden />
+                            How this answer was generated — {m.retrieved.length} retrieved chunks
+                            <span className="transition-transform group-open:rotate-180">▾</span>
+                          </span>
+                        </summary>
+                        <ol className="space-y-2 border-t border-border px-4 py-3">
+                          {m.retrieved.map((r, i) => (
+                            <li key={i} className="text-xs">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="font-mono font-semibold">{r.standardNumber}</span>
+                                <span className="text-muted-foreground">{r.clauseRef}</span>
+                                <Badge variant="outline" className="text-[10px]">
+                                  {Math.round(r.score * 100)}% match
+                                </Badge>
+                                <Badge
+                                  variant="outline"
+                                  className={`text-[10px] ${
+                                    r.origin === "Verified source"
+                                      ? "border-success/40 text-success"
+                                      : "border-warning/40 text-warning-foreground"
+                                  }`}
+                                >
+                                  {r.origin}
+                                </Badge>
+                              </div>
+                              <p className="mt-1 line-clamp-2 text-muted-foreground">{r.excerpt}</p>
+                            </li>
+                          ))}
+                        </ol>
+                      </details>
+                    )}
+
                     {m.citations && m.citations.length === 0 && m.confidence === "Low" && (
                       <p className="rounded-lg border border-dashed border-border px-4 py-3 text-xs text-muted-foreground">
                         {t("chat.noSource")}
