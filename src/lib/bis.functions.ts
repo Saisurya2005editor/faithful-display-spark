@@ -160,16 +160,17 @@ ${context ? `SOURCES:\n${context}` : "SOURCES: (none retrieved)"}`;
     const confidence: RagAnswer["confidence"] =
       chunks.length >= 3 && topScore > 0.35 ? "High" : chunks.length >= 1 ? "Medium" : "Low";
 
-    // Log usage for the admin insights page (best-effort).
-    void db()
-      .from("analytics_events")
-      .insert({
-        question: query.slice(0, 500),
-        lang,
-        confidence,
-        retrieved_count: chunks.length,
-        top_standard: chunks[0]?.standard_number ?? null,
-      })
+    // Log usage for the admin insights page (best-effort, server-side only).
+    void import("@/integrations/supabase/client.server")
+      .then(({ supabaseAdmin }) =>
+        supabaseAdmin.from("analytics_events").insert({
+          question: query.slice(0, 500),
+          lang,
+          confidence,
+          retrieved_count: chunks.length,
+          top_standard: chunks[0]?.standard_number?.slice(0, 100) ?? null,
+        }),
+      )
       .then(() => undefined, () => undefined);
 
     return { answer, citations, confidence, followups, retrievedCount: chunks.length, retrieved };
@@ -329,11 +330,13 @@ export const saveFeedback = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data }) => {
-    const { error } = await db().from("feedback").insert({
+    // Server-side only: direct client inserts are revoked on this table.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.from("feedback").insert({
       rating: data.rating === "up" ? 1 : -1,
       comment: `Lang: ${data.lang}\nQ: ${data.question}\n\nA: ${data.answer}`.slice(0, 6000),
     });
-    if (error) throw new Error(`Could not save feedback: ${error.message}`);
+    if (error) throw new Error("Could not save feedback.");
     return { ok: true };
   });
 
