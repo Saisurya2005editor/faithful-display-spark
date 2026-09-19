@@ -359,16 +359,44 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      admin_presence: {
+        Row: {
+          admin_exists: boolean | null
+        }
+        Relationships: []
+      }
+      labs_public: {
+        Row: {
+          city: string | null
+          created_at: string | null
+          lab_key: string | null
+          name: string | null
+          recognized_scope: string[] | null
+          source_url: string | null
+          state: string | null
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string | null
+          lab_key?: string | null
+          name?: string | null
+          recognized_scope?: string[] | null
+          source_url?: string | null
+          state?: string | null
+        }
+        Update: {
+          city?: string | null
+          created_at?: string | null
+          lab_key?: string | null
+          name?: string | null
+          recognized_scope?: string[] | null
+          source_url?: string | null
+          state?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
       match_chunks: {
         Args: {
           match_count?: number
