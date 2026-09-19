@@ -194,6 +194,7 @@ export type Database = {
         Row: {
           city: string | null
           created_at: string
+          data_origin: string
           id: string
           lab_key: string | null
           name: string
@@ -204,6 +205,7 @@ export type Database = {
         Insert: {
           city?: string | null
           created_at?: string
+          data_origin?: string
           id?: string
           lab_key?: string | null
           name: string
@@ -214,6 +216,7 @@ export type Database = {
         Update: {
           city?: string | null
           created_at?: string
+          data_origin?: string
           id?: string
           lab_key?: string | null
           name?: string
