@@ -1,0 +1,1 @@
+alter table public.labs drop column if exists email, drop column if exists contact;
