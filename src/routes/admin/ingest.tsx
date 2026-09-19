@@ -382,7 +382,7 @@ function IngestBody() {
                   </td>
                 </tr>
               ) : (
-                docs.map((d) => (
+                visibleDocs.map((d) => (
                   <tr key={d.id} className="border-t border-border">
                     <td className="px-4 py-2.5 font-mono text-xs font-semibold">{d.standard_number}</td>
                     <td className="max-w-[280px] truncate px-4 py-2.5">{d.title}</td>
@@ -401,6 +401,9 @@ function IngestBody() {
                       </Badge>
                     </td>
                     <td className="px-4 py-2.5 text-right">
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditing(d)} aria-label="Edit">
+                        <Pencil className="h-4 w-4" />
+                      </Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => reindex(d.id)} aria-label="Re-index">
                         <RefreshCw className="h-4 w-4" />
                       </Button>
@@ -408,7 +411,7 @@ function IngestBody() {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-destructive"
-                        onClick={() => removeDoc(d.id)}
+                        onClick={() => removeDoc(d.id, d.standard_number)}
                         aria-label="Delete"
                       >
                         <Trash2 className="h-4 w-4" />
