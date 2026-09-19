@@ -86,7 +86,7 @@ export const askBis = createServerFn({ method: "POST" })
     const context = chunks
       .map(
         (c, i) =>
-          `[Source ${i + 1}] ${c.standard_number} — ${c.title} — ${c.clause_ref}\n${c.excerpt}\nURL: ${c.source_url}`,
+          `[Source ${i + 1}] ${c.standard_number} — ${c.title} — ${c.clause_ref}\n${c.chunk_text}\nURL: ${c.source_url}`,
       )
       .join("\n\n");
 
@@ -127,7 +127,7 @@ ${context ? `SOURCES:\n${context}` : "SOURCES: (none retrieved)"}`;
         standardNumber: c.standard_number,
         title: c.title,
         clauseRef: c.clause_ref,
-        excerpt: c.excerpt,
+        excerpt: c.chunk_text,
         sourceUrl: c.source_url,
         origin: "Sample",
       });
