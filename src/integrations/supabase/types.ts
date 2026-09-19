@@ -193,9 +193,7 @@ export type Database = {
       labs: {
         Row: {
           city: string | null
-          contact: string | null
           created_at: string
-          email: string | null
           id: string
           lab_key: string | null
           name: string
@@ -205,9 +203,7 @@ export type Database = {
         }
         Insert: {
           city?: string | null
-          contact?: string | null
           created_at?: string
-          email?: string | null
           id?: string
           lab_key?: string | null
           name: string
@@ -217,9 +213,7 @@ export type Database = {
         }
         Update: {
           city?: string | null
-          contact?: string | null
           created_at?: string
-          email?: string | null
           id?: string
           lab_key?: string | null
           name?: string
