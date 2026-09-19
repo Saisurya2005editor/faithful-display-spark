@@ -307,6 +307,13 @@ function ChatPage() {
       ...c,
       messages: c.messages.map((m) => (m.id === messageId ? { ...m, rating } : m)),
     }));
+    const msgs = active?.messages ?? [];
+    const idx = msgs.findIndex((m) => m.id === messageId);
+    const question = idx > 0 ? [...msgs.slice(0, idx)].reverse().find((m) => m.role === "user")?.content : undefined;
+    const answer = msgs[idx]?.content ?? "";
+    if (question) {
+      void saveFeedback({ data: { question, answer, rating, lang } }).catch(() => undefined);
+    }
     toast.success("Thanks for the feedback");
   };
 
