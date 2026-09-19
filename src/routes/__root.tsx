@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -14,6 +15,8 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { I18nProvider } from "@/lib/i18n";
 import { ThemeProvider } from "@/components/theme";
 import { Toaster } from "@/components/ui/sonner";
+import { DemoMode } from "@/components/DemoMode";
+import { OnboardingTour } from "@/components/OnboardingTour";
 
 function NotFoundComponent() {
   return (
