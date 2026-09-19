@@ -14,13 +14,322 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      chunks: {
+        Row: {
+          chunk_text: string
+          clause_ref: string | null
+          created_at: string
+          document_id: string
+          embedding: string | null
+          heading: string | null
+          id: string
+          language: string | null
+          page: number | null
+        }
+        Insert: {
+          chunk_text: string
+          clause_ref?: string | null
+          created_at?: string
+          document_id: string
+          embedding?: string | null
+          heading?: string | null
+          id?: string
+          language?: string | null
+          page?: number | null
+        }
+        Update: {
+          chunk_text?: string
+          clause_ref?: string | null
+          created_at?: string
+          document_id?: string
+          embedding?: string | null
+          heading?: string | null
+          id?: string
+          language?: string | null
+          page?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chunks_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          created_at: string
+          id: string
+          language: string | null
+          title: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          language?: string | null
+          title?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          language?: string | null
+          title?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      documents: {
+        Row: {
+          created_at: string
+          data_origin: string | null
+          division: string | null
+          doc_key: string | null
+          enforcement: string | null
+          full_text: string | null
+          id: string
+          sector: string | null
+          source_url: string | null
+          standard_number: string
+          status: string | null
+          summary: string | null
+          tags: string[] | null
+          title: string
+          year: number | null
+        }
+        Insert: {
+          created_at?: string
+          data_origin?: string | null
+          division?: string | null
+          doc_key?: string | null
+          enforcement?: string | null
+          full_text?: string | null
+          id?: string
+          sector?: string | null
+          source_url?: string | null
+          standard_number: string
+          status?: string | null
+          summary?: string | null
+          tags?: string[] | null
+          title: string
+          year?: number | null
+        }
+        Update: {
+          created_at?: string
+          data_origin?: string | null
+          division?: string | null
+          doc_key?: string | null
+          enforcement?: string | null
+          full_text?: string | null
+          id?: string
+          sector?: string | null
+          source_url?: string | null
+          standard_number?: string
+          status?: string | null
+          summary?: string | null
+          tags?: string[] | null
+          title?: string
+          year?: number | null
+        }
+        Relationships: []
+      }
+      feedback: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          message_id: string | null
+          rating: number
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          message_id?: string | null
+          rating: number
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          message_id?: string | null
+          rating?: number
+        }
+        Relationships: []
+      }
+      labs: {
+        Row: {
+          city: string | null
+          contact: string | null
+          created_at: string
+          email: string | null
+          id: string
+          lab_key: string | null
+          name: string
+          recognized_scope: string[] | null
+          source_url: string | null
+          state: string | null
+        }
+        Insert: {
+          city?: string | null
+          contact?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          lab_key?: string | null
+          name: string
+          recognized_scope?: string[] | null
+          source_url?: string | null
+          state?: string | null
+        }
+        Update: {
+          city?: string | null
+          contact?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          lab_key?: string | null
+          name?: string
+          recognized_scope?: string[] | null
+          source_url?: string | null
+          state?: string | null
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          citations: Json | null
+          confidence: string | null
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          role: string
+        }
+        Insert: {
+          citations?: Json | null
+          confidence?: string | null
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          role: string
+        }
+        Update: {
+          citations?: Json | null
+          confidence?: string | null
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products_map: {
+        Row: {
+          created_at: string
+          id: string
+          mandatory: boolean | null
+          product_keywords: string[]
+          scheme_key: string | null
+          standard_number: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mandatory?: boolean | null
+          product_keywords?: string[]
+          scheme_key?: string | null
+          standard_number: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mandatory?: boolean | null
+          product_keywords?: string[]
+          scheme_key?: string | null
+          standard_number?: string
+        }
+        Relationships: []
+      }
+      schemes: {
+        Row: {
+          created_at: string
+          data_origin: string | null
+          description: string | null
+          documents_required: Json | null
+          eligibility: string | null
+          id: string
+          name: string
+          scheme_key: string | null
+          short_name: string | null
+          source_url: string | null
+          steps: Json | null
+        }
+        Insert: {
+          created_at?: string
+          data_origin?: string | null
+          description?: string | null
+          documents_required?: Json | null
+          eligibility?: string | null
+          id?: string
+          name: string
+          scheme_key?: string | null
+          short_name?: string | null
+          source_url?: string | null
+          steps?: Json | null
+        }
+        Update: {
+          created_at?: string
+          data_origin?: string | null
+          description?: string | null
+          documents_required?: Json | null
+          eligibility?: string | null
+          id?: string
+          name?: string
+          scheme_key?: string | null
+          short_name?: string | null
+          source_url?: string | null
+          steps?: Json | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      match_chunks: {
+        Args: {
+          match_count?: number
+          query_embedding: string
+          query_text: string
+        }
+        Returns: {
+          chunk_text: string
+          clause_ref: string
+          data_origin: string
+          document_id: string
+          heading: string
+          id: string
+          score: number
+          source_url: string
+          standard_number: string
+          title: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
