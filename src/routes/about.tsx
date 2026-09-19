@@ -3,7 +3,7 @@ import { AlertTriangle, Database, MessageSquare, Search, Sparkles } from "lucide
 import { Badge } from "@/components/ui/badge";
 import { PageShell } from "@/components/PageShell";
 import { useI18n } from "@/lib/i18n";
-import { labs, schemes, standards } from "@/data/bis-data";
+import { useLabs, useSchemes, useStandards } from "@/lib/bis-db";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
@@ -35,6 +35,10 @@ const pipeline = [
 
 function AboutPage() {
   const { t } = useI18n();
+  const { standards: dbStandards } = useStandards();
+  const schemes = useSchemes();
+  const labs = useLabs();
+
 
   return (
     <PageShell title={t("about.title")} subtitle="Architecture, data sources and the demo disclaimer.">
