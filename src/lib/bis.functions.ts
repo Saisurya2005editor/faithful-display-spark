@@ -30,7 +30,16 @@ export interface RagCitation {
   clauseRef: string;
   excerpt: string;
   sourceUrl: string;
-  origin: "Sample";
+  origin: "Sample" | "Verified source";
+}
+
+export interface RetrievedChunk {
+  standardNumber: string;
+  clauseRef: string;
+  title: string;
+  score: number;
+  excerpt: string;
+  origin: "Sample" | "Verified source";
 }
 
 export interface RagAnswer {
@@ -39,6 +48,7 @@ export interface RagAnswer {
   confidence: "High" | "Medium" | "Low";
   followups: string[];
   retrievedCount: number;
+  retrieved: RetrievedChunk[];
 }
 
 interface MatchedChunk {
