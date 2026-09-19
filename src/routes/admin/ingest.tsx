@@ -170,6 +170,16 @@ function IngestBody() {
     refreshDocs();
   };
 
+  const q = query.trim().toLowerCase();
+  const visibleDocs = q
+    ? docs.filter((d) =>
+        [d.standard_number, d.title, d.division ?? "", String(d.year ?? "")]
+          .join(" ")
+          .toLowerCase()
+          .includes(q),
+      )
+    : docs;
+
   const saveEdit = async () => {
     if (!editing) return;
     setSaving(true);
