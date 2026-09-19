@@ -126,6 +126,7 @@ function ChatPage() {
   const [listening, setListening] = useState(false);
   const threadEnd = useRef<HTMLDivElement>(null);
   const seeded = useRef(false);
+  const [hydrated, setHydrated] = useState(false);
 
   const active = conversations.find((c) => c.id === activeId) ?? conversations[0];
 
@@ -237,6 +238,7 @@ function ChatPage() {
 
   // Demo Mode handoff: a staged one-click demo query (Shift+D panel).
   useEffect(() => {
+    if (!hydrated) return;
     const demo = consumeDemoQuery();
     if (demo && !seeded.current) {
       seeded.current = true;
@@ -245,7 +247,7 @@ function ChatPage() {
       return () => window.clearTimeout(timer);
     }
     return undefined;
-  }, [lang, setLang, send]);
+  }, [hydrated, lang, setLang, send]);
 
   // Load saved conversations: Lovable Cloud for signed-in users, localStorage for guests.
   useEffect(() => {
@@ -260,6 +262,7 @@ function ChatPage() {
           setConversations(convs);
           setActiveId(convs[0]!.id);
         }
+        setHydrated(true);
         return;
       }
       const local = loadLocalConversations();
@@ -267,6 +270,7 @@ function ChatPage() {
         setConversations(local as Conversation[]);
         setActiveId(local[0]!.id);
       }
+      setHydrated(true);
     })();
     return () => {
       cancelled = true;
