@@ -190,7 +190,7 @@ function IngestBody() {
           standardNumber: editing.standard_number.trim(),
           title: editing.title.trim(),
           division: editing.division?.trim() ?? "",
-          year: editing.year ?? null,
+          year: editing.year && editing.year >= 1900 && editing.year <= 2100 ? editing.year : null,
           sourceUrl: editing.source_url?.trim() ?? "",
           summary: editing.summary?.trim() ?? "",
         },
@@ -226,11 +226,12 @@ function IngestBody() {
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
       <h1 className="flex items-center gap-2 text-2xl font-bold">
         <Database className="h-6 w-6 text-accent" aria-hidden />
-        Knowledge base ingestion
+        Document dashboard
       </h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        Upload real Indian Standards / BIS scheme documents (text-based PDF or .txt). Each is parsed,
-        chunked, embedded and stored — then cited as <strong>Verified source</strong> in answers.
+        Upload, edit and delete real Indian Standards / BIS scheme documents (text-based PDF or
+        .txt). Each upload is parsed, chunked, embedded and stored — then cited as{" "}
+        <strong>Verified source</strong> in answers.
       </p>
 
       {/* Upload zone */}
