@@ -92,7 +92,7 @@ export const listIndexedDocuments = createServerFn({ method: "GET" })
     await requireAdmin(supabase, userId);
     const { data: docs, error } = await supabase
       .from("documents")
-      .select("id, standard_number, title, division, year, source_url, data_origin, created_at")
+      .select("id, standard_number, title, division, year, source_url, summary, data_origin, created_at")
       .order("created_at", { ascending: false });
     if (error) throw new Error(`Could not list documents: ${error.message}`);
     const { data: chunkRows, error: cErr } = await supabase.from("chunks").select("document_id");
