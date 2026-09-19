@@ -434,6 +434,85 @@ function IngestBody() {
           </table>
         </div>
       </section>
+
+      <Dialog open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit document</DialogTitle>
+            <DialogDescription>
+              Update the details shown in answers and citations. Indexed text stays as it is.
+            </DialogDescription>
+          </DialogHeader>
+          {editing && (
+            <div className="grid gap-3">
+              <div className="grid gap-1.5">
+                <Label htmlFor="ed-standard">Standard number</Label>
+                <Input
+                  id="ed-standard"
+                  value={editing.standard_number}
+                  onChange={(e) => setEditing({ ...editing, standard_number: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="ed-title">Title</Label>
+                <Input
+                  id="ed-title"
+                  value={editing.title}
+                  onChange={(e) => setEditing({ ...editing, title: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-1.5">
+                  <Label htmlFor="ed-division">Division</Label>
+                  <Input
+                    id="ed-division"
+                    value={editing.division ?? ""}
+                    onChange={(e) => setEditing({ ...editing, division: e.target.value })}
+                  />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="ed-year">Year</Label>
+                  <Input
+                    id="ed-year"
+                    inputMode="numeric"
+                    value={editing.year ?? ""}
+                    onChange={(e) => {
+                      const v = e.target.value.replace(/\D/g, "").slice(0, 4);
+                      setEditing({ ...editing, year: v ? Number(v) : null });
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="ed-source">Source URL</Label>
+                <Input
+                  id="ed-source"
+                  value={editing.source_url ?? ""}
+                  onChange={(e) => setEditing({ ...editing, source_url: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="ed-summary">Summary</Label>
+                <Textarea
+                  id="ed-summary"
+                  rows={3}
+                  value={editing.summary ?? ""}
+                  onChange={(e) => setEditing({ ...editing, summary: e.target.value })}
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditing(null)} disabled={saving}>
+              Cancel
+            </Button>
+            <Button onClick={() => void saveEdit()} disabled={saving}>
+              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
