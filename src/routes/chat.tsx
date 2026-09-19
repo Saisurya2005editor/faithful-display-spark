@@ -42,6 +42,7 @@ import { LanguageSelect } from "@/components/LanguageSelect";
 import { useI18n } from "@/lib/i18n";
 import { generateAnswer, quickActionPrompts, type AnswerPayload, type Confidence } from "@/lib/mock-ai";
 import { askBis, saveFeedback } from "@/lib/bis.functions";
+import { consumeDemoQuery } from "@/lib/demo";
 import {
   loadLocalConversations,
   loadRemoteConversations,
@@ -83,6 +84,7 @@ interface Message {
   confidence?: Confidence;
   followups?: string[];
   retrievedCount?: number;
+  retrieved?: NonNullable<AnswerPayload["retrieved"]>;
   rating?: "up" | "down";
 }
 
@@ -109,7 +111,7 @@ const confidenceStyles: Record<Confidence, string> = {
 };
 
 function ChatPage() {
-  const { t, lang } = useI18n();
+  const { t, lang, setLang } = useI18n();
   const navigate = useNavigate();
   const { q } = Route.useSearch();
 
@@ -124,6 +126,7 @@ function ChatPage() {
   const [listening, setListening] = useState(false);
   const threadEnd = useRef<HTMLDivElement>(null);
   const seeded = useRef(false);
+  const [hydrated, setHydrated] = useState(false);
 
   const active = conversations.find((c) => c.id === activeId) ?? conversations[0];
 
@@ -209,6 +212,7 @@ function ChatPage() {
                               confidence: payload.confidence,
                               followups: payload.followups,
                               retrievedCount: payload.retrievedCount,
+                              ...(payload.retrieved ? { retrieved: payload.retrieved } : {}),
                             }
                           : m,
                       ),
@@ -232,6 +236,19 @@ function ChatPage() {
     }
   }, [q, send, navigate]);
 
+  // Demo Mode handoff: a staged one-click demo query (Shift+D panel).
+  useEffect(() => {
+    if (!hydrated) return;
+    const demo = consumeDemoQuery();
+    if (demo && !seeded.current) {
+      seeded.current = true;
+      if (demo.lang !== lang) setLang(demo.lang);
+      const timer = window.setTimeout(() => send(demo.query), 50);
+      return () => window.clearTimeout(timer);
+    }
+    return undefined;
+  }, [hydrated, lang, setLang, send]);
+
   // Load saved conversations: Lovable Cloud for signed-in users, localStorage for guests.
   useEffect(() => {
     let cancelled = false;
@@ -245,6 +262,7 @@ function ChatPage() {
           setConversations(convs);
           setActiveId(convs[0]!.id);
         }
+        setHydrated(true);
         return;
       }
       const local = loadLocalConversations();
@@ -252,6 +270,7 @@ function ChatPage() {
         setConversations(local as Conversation[]);
         setActiveId(local[0]!.id);
       }
+      setHydrated(true);
     })();
     return () => {
       cancelled = true;
@@ -509,6 +528,42 @@ function ChatPage() {
                           ))}
                         </div>
                       </div>
+                    )}
+
+                    {m.retrieved && m.retrieved.length > 0 && (
+                      <details className="group rounded-xl border border-border bg-card">
+                        <summary className="cursor-pointer list-none px-4 py-2.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground [&::-webkit-details-marker]:hidden">
+                          <span className="inline-flex items-center gap-2">
+                            <Search className="h-3.5 w-3.5 text-accent" aria-hidden />
+                            How this answer was generated — {m.retrieved.length} retrieved chunks
+                            <span className="transition-transform group-open:rotate-180">▾</span>
+                          </span>
+                        </summary>
+                        <ol className="space-y-2 border-t border-border px-4 py-3">
+                          {m.retrieved.map((r, i) => (
+                            <li key={i} className="text-xs">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="font-mono font-semibold">{r.standardNumber}</span>
+                                <span className="text-muted-foreground">{r.clauseRef}</span>
+                                <Badge variant="outline" className="text-[10px]">
+                                  {Math.round(r.score * 100)}% match
+                                </Badge>
+                                <Badge
+                                  variant="outline"
+                                  className={`text-[10px] ${
+                                    r.origin === "Verified source"
+                                      ? "border-success/40 text-success"
+                                      : "border-warning/40 text-warning-foreground"
+                                  }`}
+                                >
+                                  {r.origin}
+                                </Badge>
+                              </div>
+                              <p className="mt-1 line-clamp-2 text-muted-foreground">{r.excerpt}</p>
+                            </li>
+                          ))}
+                        </ol>
+                      </details>
                     )}
 
                     {m.citations && m.citations.length === 0 && m.confidence === "Low" && (

@@ -47,6 +47,15 @@ export function Navbar() {
               {t(l.key)}
             </Link>
           ))}
+          {user && (
+            <Link
+              to="/admin/ingest"
+              activeProps={{ className: "bg-secondary text-secondary-foreground" }}
+              className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            >
+              Admin
+            </Link>
+          )}
         </nav>
 
         <div className="flex items-center gap-2">
@@ -96,6 +105,15 @@ export function Navbar() {
                     {t(l.key)}
                   </Link>
                 ))}
+                {user && (
+                  <Link
+                    to="/admin/ingest"
+                    onClick={() => setOpen(false)}
+                    className="rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  >
+                    Admin
+                  </Link>
+                )}
                 {user ? (
                   <button
                     type="button"

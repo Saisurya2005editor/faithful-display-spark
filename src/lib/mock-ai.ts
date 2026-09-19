@@ -16,7 +16,16 @@ export interface Citation {
   clauseRef: string;
   excerpt: string;
   sourceUrl: string;
-  origin: "Sample";
+  origin: "Sample" | "Verified source";
+}
+
+export interface RetrievedChunk {
+  standardNumber: string;
+  clauseRef: string;
+  title: string;
+  score: number;
+  excerpt: string;
+  origin: "Sample" | "Verified source";
 }
 
 export interface AnswerPayload {
@@ -25,6 +34,7 @@ export interface AnswerPayload {
   confidence: Confidence;
   followups: string[];
   retrievedCount: number;
+  retrieved?: RetrievedChunk[];
 }
 
 const L = (lang: Lang, en: string, hi: string, te: string) => (lang === "hi" ? hi : lang === "te" ? te : en);
