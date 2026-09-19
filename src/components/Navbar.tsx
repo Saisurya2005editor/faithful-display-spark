@@ -96,13 +96,26 @@ export function Navbar() {
                     {t(l.key)}
                   </Link>
                 ))}
-                <Link
-                  to="/auth"
-                  onClick={() => setOpen(false)}
-                  className="rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
-                >
-                  {user ? t("nav.signout") : t("nav.signin")}
-                </Link>
+                {user ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOpen(false);
+                      void signOut();
+                    }}
+                    className="rounded-lg px-3 py-2.5 text-left text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  >
+                    {t("nav.signout")}
+                  </button>
+                ) : (
+                  <Link
+                    to="/auth"
+                    onClick={() => setOpen(false)}
+                    className="rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  >
+                    {t("nav.signin")}
+                  </Link>
+                )}
                 <div className="mt-4">
                   <LanguageSelect className="h-9 w-full" />
                 </div>

@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FileSearch, MessageSquare, Search as SearchIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { PageShell } from "@/components/PageShell";
 import { useI18n } from "@/lib/i18n";
 import { findStandards, standards, type BISStandard } from "@/data/bis-data";
+import { searchDocuments } from "@/lib/bis.functions";
 
 export const Route = createFileRoute("/search")({
   head: () => ({
@@ -37,23 +38,45 @@ const divisions = Array.from(new Set(standards.map((s) => s.division))).sort();
 const years = Array.from(new Set(standards.map((s) => s.year))).sort((a, b) => b - a);
 
 function SearchPage() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [query, setQuery] = useState("");
   const [sector, setSector] = useState("all");
   const [division, setDivision] = useState("all");
   const [year, setYear] = useState("all");
   const [status, setStatus] = useState("all");
   const [selected, setSelected] = useState<BISStandard | null>(null);
+  const [semantic, setSemantic] = useState<Map<string, number> | null>(null);
+
+  // Debounced semantic (embedding) search over the ingested standards corpus.
+  useEffect(() => {
+    const q = query.trim();
+    if (!q) {
+      setSemantic(null);
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      void searchDocuments({ data: { query: q, lang } })
+        .then(({ ranked }) => setSemantic(new Map(ranked.map((r) => [r.standardNumber, r.relevance]))))
+        .catch(() => setSemantic(null));
+    }, 500);
+    return () => window.clearTimeout(timer);
+  }, [query, lang]);
 
   const results = useMemo(() => {
-    const base = query.trim() ? findStandards(query) : standards;
-    return base
+    const q = query.trim();
+    const filtered = (q ? findStandards(query) : standards)
       .filter((s) => (sector === "all" ? true : s.sector === sector))
       .filter((s) => (division === "all" ? true : s.division === division))
       .filter((s) => (year === "all" ? true : String(s.year) === year))
-      .filter((s) => (status === "all" ? true : s.status === status))
-      .map((s, i) => ({ s, relevance: query.trim() ? Math.max(52, 97 - i * 6) : 100 - i }));
-  }, [query, sector, division, year, status]);
+      .filter((s) => (status === "all" ? true : s.status === status));
+    if (q && semantic && semantic.size > 0) {
+      const rel = (s: BISStandard) => semantic.get(s.standardNumber) ?? 0;
+      return [...filtered]
+        .sort((a, b) => rel(b) - rel(a))
+        .map((s) => ({ s, relevance: rel(s) || 41 }));
+    }
+    return filtered.map((s, i) => ({ s, relevance: q ? Math.max(52, 97 - i * 6) : 100 - i }));
+  }, [query, sector, division, year, status, semantic]);
 
   const reset = () => {
     setQuery("");

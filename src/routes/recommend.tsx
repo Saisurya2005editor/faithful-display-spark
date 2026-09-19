@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageShell } from "@/components/PageShell";
 import { useI18n } from "@/lib/i18n";
-import { findStandards, getScheme, productCategories, type BISStandard } from "@/data/bis-data";
+import { findStandards, getScheme, productCategories, standards, type BISStandard } from "@/data/bis-data";
+import { recommendProduct } from "@/lib/bis.functions";
 
 export const Route = createFileRoute("/recommend")({
   head: () => ({
@@ -38,7 +39,7 @@ interface Ranked {
 }
 
 function RecommendPage() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [product, setProduct] = useState("");
   const [category, setCategory] = useState("all");
   const [market, setMarket] = useState("domestic");
@@ -46,22 +47,36 @@ function RecommendPage() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<Ranked[] | null>(null);
 
+  const fallbackLocal = (text: string): Ranked[] => {
+    const matched = findStandards(`${text} ${category === "all" ? "" : category}`).filter((s) =>
+      category === "all" ? true : s.sector === category,
+    );
+    const pool = matched.length ? matched : findStandards(text);
+    return pool.slice(0, 6).map((standard, i) => ({ standard, score: Math.max(58, 96 - i * 8) }));
+  };
+
   const run = () => {
-    if (!product.trim()) return;
+    const text = product.trim();
+    if (!text) return;
     setLoading(true);
     setResults(null);
-    window.setTimeout(() => {
-      const matched = findStandards(`${product} ${category === "all" ? "" : category}`).filter((s) =>
-        category === "all" ? true : s.sector === category,
-      );
-      const pool = matched.length ? matched : findStandards(product);
-      const ranked = pool.slice(0, 6).map((standard, i) => ({
-        standard,
-        score: Math.max(58, 96 - i * 8),
-      }));
-      setResults(ranked);
-      setLoading(false);
-    }, 650);
+    void (async () => {
+      try {
+        const { ranked } = await recommendProduct({ data: { product: text, lang } });
+        const mapped = ranked
+          .map((r) => {
+            const standard = standards.find((s) => s.standardNumber === r.standardNumber);
+            return standard ? { standard, score: r.score } : null;
+          })
+          .filter((r): r is Ranked => r !== null)
+          .filter((r) => (category === "all" ? true : r.standard.sector === category));
+        setResults(mapped.length ? mapped : fallbackLocal(text));
+      } catch {
+        setResults(fallbackLocal(text));
+      } finally {
+        setLoading(false);
+      }
+    })();
   };
 
   return (
