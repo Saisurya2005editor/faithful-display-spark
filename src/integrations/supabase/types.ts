@@ -359,44 +359,10 @@ export type Database = {
       }
     }
     Views: {
-      admin_presence: {
-        Row: {
-          admin_exists: boolean | null
-        }
-        Relationships: []
-      }
-      labs_public: {
-        Row: {
-          city: string | null
-          created_at: string | null
-          lab_key: string | null
-          name: string | null
-          recognized_scope: string[] | null
-          source_url: string | null
-          state: string | null
-        }
-        Insert: {
-          city?: string | null
-          created_at?: string | null
-          lab_key?: string | null
-          name?: string | null
-          recognized_scope?: string[] | null
-          source_url?: string | null
-          state?: string | null
-        }
-        Update: {
-          city?: string | null
-          created_at?: string | null
-          lab_key?: string | null
-          name?: string | null
-          recognized_scope?: string[] | null
-          source_url?: string | null
-          state?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
+      admin_exists: { Args: never; Returns: boolean }
       match_chunks: {
         Args: {
           match_count?: number
