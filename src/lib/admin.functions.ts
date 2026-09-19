@@ -125,8 +125,15 @@ export const getAdminStatus = createServerFn({ method: "GET" })
 export const claimFirstAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabase, userId } = context as any;
-    const { error } = await supabase.from("user_roles").insert({ user_id: userId, role: "admin" });
+    // One-time bootstrap, enforced server-side with the privileged client:
+    // the client-facing "First user can claim admin" policy is removed, so this
+    // is the only path to the first admin and it refuses once any admin exists.
+    const { userId } = context as any;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: adminExists, error: checkError } = await supabaseAdmin.rpc("admin_exists");
+    if (checkError) throw new Error(`Admin check failed: ${checkError.message}`);
+    if (adminExists) throw new Response("Forbidden: an admin already exists", { status: 403 });
+    const { error } = await supabaseAdmin.from("user_roles").insert({ user_id: userId, role: "admin" });
     if (error) throw new Error(`Could not claim admin: ${error.message}`);
     return { ok: true };
   });
