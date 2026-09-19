@@ -336,3 +336,173 @@ export const getInsights = createServerFn({ method: "GET" })
       recent: rows.slice(0, 10),
     };
   });
+
+/* ------------------------------------------------------------------ *
+ * Clause → test requirements, and product ⇄ standard links.
+ * ------------------------------------------------------------------ */
+
+const TEST_HINT = /\b(test|tests|testing|requirement|limit|tolerance|shall not exceed|minimum|maximum|sampling)\b/i;
+const METHOD_RE = /\bIS\s?\d{2,5}(?:\s?\([^)]{1,20}\))?(?:\s?[:\-]\s?\d{4})?(?:\s?Part\s?\d+)?/i;
+const LIMIT_RE =
+  /\b\d+(?:\.\d+)?\s?(?:%|per\s?cent|mg\/l|mg\/kg|ppm|µm|um|mm|cm|m|kg|g|n\/mm2|mpa|kpa|kv|v|a|ma|w|kw|hz|°c|deg\s?c|min|minutes|h|hours|s|seconds|litre|l)\b/i;
+
+/** Heuristic test/limit suggestions mined from a document's indexed clauses. */
+export const suggestTests = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ documentId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context as any;
+    await requireAdmin(supabase, userId);
+    const { data: rows, error } = await supabase
+      .from("chunks")
+      .select("clause_ref, heading, chunk_text")
+      .eq("document_id", data.documentId)
+      .limit(400);
+    if (error) throw new Error(`Could not read clauses: ${error.message}`);
+
+    const seen = new Set<string>();
+    const suggestions: { testName: string; clauseRef: string; requirement: string; method: string }[] = [];
+    for (const r of (rows ?? []) as any[]) {
+      const text: string = r.chunk_text ?? "";
+      const heading: string = (r.heading ?? "").trim();
+      if (!TEST_HINT.test(`${heading} ${text}`)) continue;
+      const sentence =
+        text
+          .split(/(?<=[.;])\s+/)
+          .find((s: string) => /\bshall\b/i.test(s) && (LIMIT_RE.test(s) || TEST_HINT.test(s))) ?? "";
+      if (!sentence) continue;
+      const name = (heading && heading.length > 3 ? heading : sentence.slice(0, 70)).replace(/\s+/g, " ");
+      const key = `${r.clause_ref}|${name}`.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      suggestions.push({
+        testName: name.slice(0, 120),
+        clauseRef: r.clause_ref ?? "General",
+        requirement: sentence.slice(0, 400),
+        method: sentence.match(METHOD_RE)?.[0] ?? "",
+      });
+      if (suggestions.length >= 25) break;
+    }
+    return { suggestions };
+  });
+
+const TestRow = z.object({
+  id: z.string().uuid().optional(),
+  documentId: z.string().uuid().nullable().default(null),
+  standardNumber: z.string().min(1).max(60),
+  productCategory: z.string().max(120).default(""),
+  testName: z.string().min(1).max(200),
+  clauseRef: z.string().max(60).default(""),
+  requirement: z.string().max(1000).default(""),
+  method: z.string().max(200).default(""),
+});
+
+export const listTests = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ standardNumber: z.string().min(1) }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context as any;
+    await requireAdmin(supabase, userId);
+    const { data: rows, error } = await supabase
+      .from("standard_tests")
+      .select("id, standard_number, product_category, test_name, clause_ref, requirement, method")
+      .eq("standard_number", data.standardNumber)
+      .order("clause_ref", { ascending: true });
+    if (error) throw new Error(`Could not load tests: ${error.message}`);
+    return rows ?? [];
+  });
+
+/** Insert or update one or more test requirements for a standard. */
+export const saveTests = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ tests: z.array(TestRow).min(1).max(60) }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context as any;
+    await requireAdmin(supabase, userId);
+    let saved = 0;
+    for (const t of data.tests) {
+      const payload = {
+        document_id: t.documentId,
+        standard_number: t.standardNumber,
+        product_category: t.productCategory || null,
+        test_name: t.testName,
+        clause_ref: t.clauseRef || null,
+        requirement: t.requirement || null,
+        method: t.method || null,
+        data_origin: "Verified source",
+      };
+      const { error } = t.id
+        ? await supabase.from("standard_tests").update(payload).eq("id", t.id)
+        : await supabase.from("standard_tests").insert(payload);
+      if (error) throw new Error(`Could not save test: ${error.message}`);
+      saved++;
+    }
+    return { saved };
+  });
+
+export const deleteTest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context as any;
+    await requireAdmin(supabase, userId);
+    const { error } = await supabase.from("standard_tests").delete().eq("id", data.id);
+    if (error) throw new Error(`Could not delete test: ${error.message}`);
+    return { ok: true };
+  });
+
+export const listProductLinks = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ standardNumber: z.string().min(1) }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context as any;
+    await requireAdmin(supabase, userId);
+    const { data: rows, error } = await supabase
+      .from("products_map")
+      .select("id, standard_number, product_category, product_keywords, mandatory, scheme_key")
+      .eq("standard_number", data.standardNumber);
+    if (error) throw new Error(`Could not load product links: ${error.message}`);
+    return rows ?? [];
+  });
+
+export const saveProductLink = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        id: z.string().uuid().optional(),
+        standardNumber: z.string().min(1).max(60),
+        productCategory: z.string().min(1).max(120),
+        keywords: z.array(z.string().min(1).max(60)).max(30).default([]),
+        mandatory: z.boolean().default(false),
+        schemeKey: z.string().max(60).default(""),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context as any;
+    await requireAdmin(supabase, userId);
+    const payload = {
+      standard_number: data.standardNumber,
+      product_category: data.productCategory,
+      product_keywords: data.keywords.length ? data.keywords : [data.productCategory.toLowerCase()],
+      mandatory: data.mandatory,
+      scheme_key: data.schemeKey || null,
+    };
+    const { error } = data.id
+      ? await supabase.from("products_map").update(payload).eq("id", data.id)
+      : await supabase.from("products_map").insert(payload);
+    if (error) throw new Error(`Could not save product link: ${error.message}`);
+    return { ok: true };
+  });
+
+export const deleteProductLink = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context as any;
+    await requireAdmin(supabase, userId);
+    const { error } = await supabase.from("products_map").delete().eq("id", data.id);
+    if (error) throw new Error(`Could not delete product link: ${error.message}`);
+    return { ok: true };
+  });
